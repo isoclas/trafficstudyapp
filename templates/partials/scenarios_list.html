@@ -1,0 +1,36 @@
+<div id="scenarios-list" class="fade-me-in">
+    <h2 class="mt-4">Scenarios</h2>
+    {% if scenarios %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scenario in scenarios %}
+                    <tr>
+                        <td>{{ scenario.name }}</td>
+                        <td>{{ scenario.status }}</td>
+                        <td>
+                            <a href="{{ url_for('frontend.scenario', study_id=study_id, scenario_id=scenario.id) }}"
+                               hx-get="{{ url_for('frontend.scenario', study_id=study_id, scenario_id=scenario.id) }}"
+                               hx-push-url="true"
+                               hx-target="body"
+                               hx-swap="innerHTML"
+                               hx-indicator=".htmx-indicator"
+                               class="btn btn-sm btn-info">
+                                <span class="htmx-indicator" role="status" aria-hidden="true"></span>
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No scenarios configured.</p>
+    {% endif %}
+</div>

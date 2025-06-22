@@ -1,0 +1,18 @@
+<div id="scenario-downloads" class="fade-me-in">
+    <h2 class="mt-4">Downloads</h2>
+    {% if scenario.has_merged %}
+        <ul class="list-group">
+            <li class="list-group-item">
+                <a href="{{ url_for('api.download_scenario_file', study_id=study_id, scenario_id=scenario.id, file_type='merged') }}" class="btn btn-sm btn-primary">Download Merged CSV</a>
+            </li>
+            {% if scenario.has_attin %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('api.download_scenario_file', study_id=study_id, scenario_id=scenario.id, file_type='attin_txt') }}" class="btn btn-sm btn-primary">Download ATTIN TXT</a>
+                </li>
+            {% endif %}
+        </ul>
+    {% else %}
+        <p>No output files available.</p>
+    {% endif %}
+    <!-- This div is always present, even when no downloads are available -->
+</div>

@@ -1,0 +1,88 @@
+.drop-zone {
+    border: 2px dashed #ccc;
+    border-radius: 5px;
+    padding: 30px;
+    text-align: center;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.drop-zone.drag-over,
+#file-drop-zone.drag-over {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background-color: #f8f9fa;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.file-icon {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.file-name {
+    margin-right: 10px;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+.file-size {
+    color: #6c757d;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    margin-left: 5px;
+}
+
+.file-type-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-left: 10px;
+    white-space: nowrap;
+}
+
+.file-actions {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+.file-remove {
+    cursor: pointer;
+    color: #dc3545;
+    margin-left: 10px;
+}
+
+.file-remove:hover {
+    color: #c82333;
+}
+
+/* Responsive layout for file items */
+@media (max-width: 768px) {
+    .file-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .file-size {
+        margin-left: 0;
+    }
+    .file-actions {
+        margin-top: 5px;
+    }
+}

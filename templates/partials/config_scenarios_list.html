@@ -1,0 +1,9 @@
+{% from "macros/components.html" import scenario_table %}
+
+<div class="config-scenarios-list">
+    {% if scenarios %}
+        {{ scenario_table(scenarios, study_id) }}
+    {% else %}
+        <p>No scenarios configured for this configuration.</p>
+    {% endif %}
+</div>

@@ -1,0 +1,46 @@
+{# templates/partials/scenario_file_list.html #}
+<div class="uploaded-files-list mb-3">
+    {% if scenario['uploaded_files'] and scenario['uploaded_files']|length > 0 %}
+        <ul class="list-group">
+            {% for file_info in scenario['uploaded_files'] %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="file-details flex-grow-1 me-3">
+                        {% if file_info.is_uploaded %}
+                            <span class="file-name fw-bold">{{ file_info.original_name }}</span>
+                        {% else %}
+                            <span class="file-name text-muted fst-italic">Missing {{ file_info.file_type_label }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="file-actions d-flex align-items-center">
+                        <select class="form-select form-select-sm me-2 file-type-select" 
+                                name="file_type_{{ file_info.file_type_id }}" 
+                                data-scenario-id="{{ scenario['id'] }}"
+                                data-current-type="{{ file_info.file_type_id }}"
+                                {% if not file_info.is_uploaded %}disabled{% endif %}>
+                            <option value="am_csv" {% if file_info.file_type_id == 'am_csv' %}selected{% endif %}>AM CSV</option>
+                            <option value="pm_csv" {% if file_info.file_type_id == 'pm_csv' %}selected{% endif %}>PM CSV</option>
+                            <option value="attout_txt" {% if file_info.file_type_id == 'attout_txt' %}selected{% endif %}>ATTOUT TXT</option>
+                        </select>
+                        
+                        {% if file_info.is_uploaded %}
+                            <button class="btn btn-danger btn-sm file-delete-btn"
+                                    hx-post="{{ url_for('frontend.delete_scenario_file_interactive', study_id=study_id, scenario_id=scenario['id'], file_type_id=file_info.file_type_id) }}"
+                                    hx-target="#file-upload-and-actions" 
+                                    hx-swap="innerHTML"
+                                    hx-confirm="Are you sure you want to delete {{ file_info.original_name }} ({{ file_info.file_type_label }})?"
+                                    hx-on::after-request="if(event.detail.successful) { window.location.reload(); }">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        {% else %}
+                            {# Placeholder for alignment or could be an upload button for this specific slot if we want later #}
+                            <div style="width: 38px;"></div> {# Match button width roughly #}
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">No file information available.</p>
+    {% endif %}
+</div>

@@ -1,0 +1,67 @@
+<h4 class="text-2xl font-bold dark:text-white mb-5">Configure Study</h4>
+<form id="config-form"
+      hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
+      hx-target="#configurations-list"
+      hx-swap="outerHTML"
+      hx-indicator=".config-indicator"
+      hx-on::after-request="this.reset()">
+    <div class="flex items-end gap-4">
+        <div class="flex-grow">
+            <input type="text" id="default-input config_name" name="config_name" placeholder="Configuration name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+        </div>
+        <div class="flex-grow">
+            <input type="number" id="number-input phases_n" name="phases_n" min="0" aria-describedby="helper-text-explanation" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Number of phases" required />
+        </div>
+    </div>
+    <div class="flex flex-col items-start">
+        <div class="grid grid-cols-2 gap-4 py-6">
+            <div class="flex items-center h-8 w-60">
+                <input id="include_bg_dist" type="checkbox" name="include_bg_dist" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-0 dark:bg-gray-700 dark:border-gray-600">
+                <label for="include_bg_dist" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Background Distribution</label>
+            </div>
+            <div class="flex items-center h-8 w-60">
+                <input id="include_bg_assign" type="checkbox" name="include_bg_assign" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-0 dark:bg-gray-700 dark:border-gray-600">
+                <label for="include_bg_assign" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Background Assignment</label>
+            </div>
+            <div class="flex items-center h-8 w-60">
+                <input id="include_trip_dist" type="checkbox" name="include_trip_dist" onchange="toggleTripDistCount()" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-0 dark:bg-gray-700 dark:border-gray-600">
+                <label for="include_trip_dist" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Trip Distribution</label>
+                <div id="trip_dist_count_container" class="ml-2" style="display: none;">
+                    <div class="relative flex items-center max-w-[5rem]">
+                        <button type="button" id="decrement-button" data-input-counter-decrement="trip_dist_count" class="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-s-lg p-1 h-8 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-0 focus:outline-none">
+                            <svg class="w-2 h-2 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16"/>
+                            </svg>
+                        </button>
+
+                        <input type="text" id="trip_dist_count" name="trip_dist_count" data-input-counter data-input-counter-min="1" data-input-counter-max="9" class="bg-gray-50 border-x-0 border-gray-300 h-8 text-center text-gray-900 text-xs focus:ring-blue-500 focus:border-blue-500 block w-8 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="1" required />
+                        
+                        <button type="button" id="increment-button" data-input-counter-increment="trip_dist_count" class="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-e-lg p-1 h-8 focus:ring-gray-100 dark:focus:ring-gray-700 focus:ring-0 focus:outline-none">
+                            <svg class="w-2 h-2 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center h-8 w-60">
+                <input id="include_trip_assign" type="checkbox" name="include_trip_assign" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-0 dark:bg-gray-700 dark:border-gray-600">
+                <label for="include_trip_assign" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Trip Assignment</label>
+            </div>
+        </div>
+
+        <button type="submit" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-6 py-3 dark:bg-blue-600 dark:hover:bg-blue-700 w-50">
+            <span class="htmx-indicator config-indicator" role="status" aria-hidden="true"></span>
+            Create Configuration
+        </button>
+    </div>
+
+
+</form>
+
+<br>
+<hr class="opacity-10">
+<br>
+<!-- Flash messages are handled by HTMX -->
+
+<script src="{{ url_for('static', filename='js/config-form.js') }}"></script>

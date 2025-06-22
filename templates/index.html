@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Traffic Studies{% endblock %}
+
+{% block content %}
+    {% include 'partials/study_form.html' %}
+{% endblock %}
+
+{% block filters %}
+    {% include 'partials/filters.html' %}
+    {% include 'partials/studies_list.html' %}
+{% endblock %}

@@ -1,0 +1,259 @@
+{% macro collapsible(id, title, badges=None, delete_button=True, study_id=None, config_id=None) %}
+<div class="max-h-[500px] hs-accordion bg-white border border-gray-200 -mt-px first:rounded-t-lg last:rounded-b-lg dark:bg-neutral-800 dark:border-neutral-700" id="{{ id }}">
+    {% if badges %}
+    <div data-popover id="popover-{{ id }}" role="tooltip" class="z-50 invisible inline-block w-64 text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 dark:text-gray-400 dark:border-gray-600 dark:bg-gray-800">
+        <div class="px-3 py-2">
+            {% for badge in badges %}
+                <p class="text-xs mb-1">{{ badge }}</p>
+            {% endfor %}
+        </div>
+        <div data-popper-arrow></div>
+    </div>
+    {% endif %}
+    <div class="flex items-center justify-between w-full py-4 px-3 sm:px-5">
+        <button class="cursor-pointer hs-accordion-toggle hs-accordion-active:text-blue-600 flex items-center gap-x-2 sm:gap-x-4 font-semibold text-start text-gray-800 hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:hs-accordion-active:text-blue-500 dark:text-neutral-200 dark:hover:text-neutral-400 dark:focus:outline-hidden dark:focus:text-neutral-400 flex-1 min-w-0"
+                aria-expanded="false"
+                aria-controls="{{ id }}-content"
+                hx-on:click="
+                    // Don't propagate if clicking on delete button
+                    if (event.target.closest('.delete-btn')) {
+                        event.stopPropagation();
+                        return;
+                    }
+                    
+                    const accordion = this.closest('.hs-accordion');
+                    const content = accordion.querySelector('.hs-accordion-content');
+                    const isActive = accordion.classList.contains('hs-accordion-active');
+                    
+                    // Close any open accordions first
+                    document.querySelectorAll('.hs-accordion.hs-accordion-active').forEach(el => {
+                        if (el !== accordion) {
+                            el.classList.remove('hs-accordion-active');
+                            const otherContent = el.querySelector('.hs-accordion-content');
+                            if (otherContent) {
+                                otherContent.style.height = '0px';
+                            }
+                            const otherButton = el.querySelector('.hs-accordion-toggle');
+                            if (otherButton) {
+                                otherButton.setAttribute('aria-expanded', 'false');
+                                // Reset icons to down arrow
+                                otherButton.querySelector('.accordion-icon-down').classList.remove('hidden');
+                                otherButton.querySelector('.accordion-icon-down').classList.add('block');
+                                otherButton.querySelector('.accordion-icon-up').classList.remove('block');
+                                otherButton.querySelector('.accordion-icon-up').classList.add('hidden');
+                            }
+                        }
+                    });
+                    
+                    // Toggle this accordion
+                    if (isActive) {
+                        accordion.classList.remove('hs-accordion-active');
+                        content.style.height = '0px';
+                        this.setAttribute('aria-expanded', 'false');
+                        // Show down arrow, hide up arrow
+                        this.querySelector('.accordion-icon-down').classList.remove('hidden');
+                        this.querySelector('.accordion-icon-down').classList.add('block');
+                        this.querySelector('.accordion-icon-up').classList.remove('block');
+                        this.querySelector('.accordion-icon-up').classList.add('hidden');
+                    } else {
+                        accordion.classList.add('hs-accordion-active');
+                        content.style.height = content.scrollHeight + 'px';
+                        this.setAttribute('aria-expanded', 'true');
+                        // Show up arrow, hide down arrow
+                        this.querySelector('.accordion-icon-down').classList.remove('block');
+                        this.querySelector('.accordion-icon-down').classList.add('hidden');
+                        this.querySelector('.accordion-icon-up').classList.remove('hidden');
+                        this.querySelector('.accordion-icon-up').classList.add('block');
+                    }
+                ">
+            <svg class="accordion-icon-down block w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
+            </svg>
+            <svg class="accordion-icon-up hidden w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 15 7-7 7 7"/>
+            </svg>
+            
+            <span class="w-12 sm:w-16 md:w-20 lg:w-24 xl:w-28 truncate text-sm sm:text-base flex-shrink-0" title="{{ title }}">{{ title }}</span>
+
+            <!--badge-->
+            {% if badges %}
+                <span data-popover-target="popover-{{ id }}" data-popover-placement="right" class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300 cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 flex-shrink-0 mr-2">Details</span>
+            {% endif %}
+            <!--badge-->
+
+            <!--progress bar-->
+            <div class="w-24 sm:w-32 md:w-40 lg:w-48 xl:w-56 2xl:w-64 bg-gray-200 rounded-full dark:bg-gray-700 overflow-hidden flex-shrink-0">
+                <div 
+                  id="progress-bar-{{ config_id }}"
+                  class="h-2.5 rounded-full bg-blue-500 bg-[repeating-linear-gradient(-45deg,#ffffff_0,#ffffff_2px,transparent_2px,transparent_6px)]" 
+                  style="width: 0%">
+                </div>
+            </div>
+            <!--progress bar-->
+
+            <!--add scenario-->
+            <!-- <button type="button"
+            title="Add scenario"
+            class="pointer-events-auto cursor-pointer focus:outline-none text-white bg-white focus:ring-0 focus:ring-red-300 font-medium rounded-lg text-sm px-2.5 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+            <svg class="w-6 h-6 text-gray-600 hover:text-blue-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h4M9 3v4a1 1 0 0 1-1 1H4m11 6v4m-2-2h4m3 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z"/>
+              </svg>              
+            </button> -->
+            <!--add scenario-->
+
+        </button>
+        {% if delete_button and study_id %}
+            <button type="button"
+                    class="pointer-events-auto cursor-pointer focus:outline-none text-white bg-white focus:ring-0 focus:ring-red-300 font-medium rounded-lg text-sm px-2 py-2 sm:px-2.5 sm:py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900 flex-shrink-0 ml-2"
+                    hx-get="{{ url_for('frontend.delete_config_confirm', study_id=study_id, config_id=config_id) }}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    title="Delete configuration"
+                    onclick="event.stopPropagation();">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 hover:text-red-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+                </svg>
+            </button>
+        {% endif %}
+    </div>
+    <div id="{{ id }}-content" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" style="height: 0px;" role="region" aria-labelledby="{{ id }}">
+        <div class="pb-4 px-5 max-h-[400px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar]:h-1
+        [&::-webkit-scrollbar-track]:bg-gray-100
+        [&::-webkit-scrollbar-thumb]:bg-gray-300
+        dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+        dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+            {{ caller() }}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro scenario_table(scenarios, study_id) %}
+<div class="table-container">
+    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10">
+            <tr>
+                <th scope="col" class="px-2 py-3">
+                    scenario
+                </th>
+                <th scope="col" class="px-2 py-3">
+                    status
+                </th>
+                <th scope="col" class="px-2 py-3">
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scenario in scenarios %}
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                    <td class="px-2 py-4 text-left">{{ scenario.name }}</td>
+
+                    <td class="px-2 py-4 text-left">
+                        {% if scenario.status == 'PENDING_FILES' %}
+                            <div class="flex items-center">
+                                <div class="flex w-2.5 h-2.5 me-2 bg-gray-200 rounded-full"></div> Pending
+                            </div>
+                        {% elif scenario.status == 'READY_TO_PROCESS' %}
+                            <div class="flex items-center">
+                                <div class="flex w-2.5 h-2.5 me-2 bg-yellow-300 rounded-full"></div> Ready
+                            </div>
+                        {% elif scenario.status == 'COMPLETE' %}
+                            <div class="flex items-center">
+                                <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div> Complete
+                            </div>
+                        {% else %}
+                            {{ scenario.status }}
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-2 py-4 text-left">
+                        <div class="flex flex-row justify-between">
+                            <a href="{{ url_for('frontend.scenario', study_id=study_id, scenario_id=scenario.id) }}"
+                               hx-get="{{ url_for('frontend.scenario', study_id=study_id, scenario_id=scenario.id) }}"
+                               hx-push-url="true"
+                               hx-target="body"
+                               hx-swap="innerHTML"
+                               hx-indicator=".htmx-indicator"
+                               class="btn btn-sm btn-info me-2 cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
+                                <span class="htmx-indicator" role="status" aria-hidden="true"></span>
+                                View
+                                <!-- <svg class="w-5 h-5 text-gray-600 hover:text-blue-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-width="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/>
+                                    <path stroke="currentColor" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                </svg> -->
+                            </a>
+                            <button type="button"
+                                    class="cursor-pointer btn btn-sm btn-danger"
+                                    hx-get="{{ url_for('frontend.delete_scenario_confirm', study_id=study_id, scenario_id=scenario.id, config_id=scenario.configuration_id) }}"
+                                    hx-target="#modal-container"
+                                    hx-swap="innerHTML"
+                                    title="Delete scenario">
+                                    <svg class="w-5 h-5 text-gray-600 hover:text-red-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                                    </svg>
+                                      
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+
+
+{% macro study_list_item(study) %}
+<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+    <th scope="row" class="flex justify-between px-2 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+        <a href="{{ url_for('frontend.study', study_id=study.id) }}"
+           hx-get="{{ url_for('frontend.study', study_id=study.id) }}"
+           hx-push-url="true"
+           hx-target="body"
+           hx-swap="innerHTML"
+           hx-indicator=".list-indicator-{{ study.id }}">
+            <div class="text-base font-semibold hover:text-blue-700">{{ study.name }}</div>
+            {% if study.analyst_name %}
+            <div class="text-xs font-normal text-gray-500">by {{ study.analyst_name }}</div>
+            {% endif %}
+            <span class="htmx-indicator list-indicator-{{ study.id }}" role="status" aria-hidden="true"></span>
+        </a>
+    </th>
+    <td class="px-2 py-4">
+        {% if study.created_at %}
+        {{ study.created_at|strftime('%m/%d/%Y') }}
+        {% endif %}
+    </td>
+    <td class="px-2 py-4">
+        <div class="flex items-center">
+            <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div> Complete
+        </div>
+    </td>
+    <td class="px-2 py-4 text-left">
+        <button id="dropdownMenuIconButton-{{ study.id }}" data-dropdown-toggle="dropdownDots-{{ study.id }}" data-dropdown-placement="bottom-start" data-dropdown-trigger="click" class="inline-flex self-center items-center p-2 text-sm font-medium text-center text-gray-900 rounded-lg hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 4 15">
+                <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"/>
+            </svg>
+        </button>
+        <div id="dropdownDots-{{ study.id }}" data-dropdown-close-on-click-outside class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-30 dark:bg-gray-700 dark:divide-gray-600">
+            <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconButton-{{ study.id }}">
+                <li>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit Study</a>
+                </li>
+                <li>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">View Notes</a>
+                </li>
+                <li>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                       hx-get="{{ url_for('frontend.delete_study_confirm', study_id=study.id) }}"
+                       hx-target="#modal-container"
+                       hx-swap="innerHTML"
+                       data-dropdown-hide="dropdownDots-{{ study.id }}">Delete</a>
+                </li>
+            </ul> 
+        </div>
+    </td>
+</tr>
+{% endmacro %}
+

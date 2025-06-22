@@ -1,0 +1,18 @@
+<h2 class="mt-4">Actions</h2>
+<form id="process-form" hx-post="{{ url_for('frontend.process_scenario_frontend', study_id=study_id, scenario_id=scenario['id']) }}"
+      hx-target="#process-response"
+      hx-swap="innerHTML"
+      hx-indicator=".process-indicator">
+    <button type="submit" class="btn btn-success" {% if not scenario['has_am_csv'] or not scenario['has_pm_csv'] or not scenario['has_attout'] %}disabled{% endif %}>
+        <span class="htmx-indicator spinner-border spinner-border-sm process-indicator" role="status" aria-hidden="true"></span>
+        Process Scenario
+    </button>
+    <!-- Debug info to help troubleshoot -->
+    <div class="mt-2 small text-muted">
+        Current status: {{ scenario['status'] }}<br>
+        Files: AM CSV: {{ scenario['has_am_csv'] }}, PM CSV: {{ scenario['has_pm_csv'] }}, ATTOUT: {{ scenario['has_attout'] }}
+    </div>
+</form>
+<!-- Hidden target element for the form response -->
+<div id="process-response" class="d-none"></div>
+<!-- Flash message trigger removed -->

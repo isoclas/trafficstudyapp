@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Traffic Studies{% endblock %}</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Mynerve Font -->
+    <style>
+        @font-face {
+            font-family: 'Mynerve';
+            src: url('{{ url_for("static", filename="fonts/Mynerve-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <!-- Tailwind CSS with Flowbite -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- HTMX Library -->
+    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
+    <!-- Optional: HTMX extensions -->
+    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body class="Inter">
+    <div class="absolute inset-0 -z-10 h-1/2 w-full bg-white bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] [background-size:16px_16px] [mask-image:linear-gradient(to_bottom,white,transparent)]"></div>
+    <div class="@container">
+        <div class="max-w-3xl mx-auto px-4 py-8">
+        <!-- Breadcrumb Navigation -->
+        <nav class="flex mb-10" aria-label="Breadcrumb">
+          <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+            {% block breadcrumbs %}
+            <li class="inline-flex items-center">
+              <a href="{{ url_for('frontend.index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                 hx-get="{{ url_for('frontend.index') }}"
+                 hx-push-url="true"
+                 hx-target="body"
+                 hx-swap="innerHTML">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
+                </svg>
+                Home
+              </a>
+            </li>
+            {% endblock %}
+          </ol>
+        </nav>
+
+        {% block header %}
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-15">
+                {% block page_title %}
+                <h1 class="font-extrabold leading-none tracking-tight text-gray-900 text-3xl dark:text-white"><mark class="px-2 text-white bg-blue-600 rounded-sm dark:bg-blue-500">Traffic Studies</mark></h1>
+                {% endblock %}
+
+                <!--add menu items here in future-->
+            </div>
+        {% endblock %}
+
+        <div id="content">
+            {% block content %}{% endblock %}
+        </div>
+
+        {% block filters %}{% endblock %}
+
+        </div>
+    </div>
+
+    <!-- Modal container for HTMX -->
+    <div id="modal-container"></div>
+
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+    {% block scripts %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+    <script>
+        // Re-initialize Flowbite components after HTMX content swaps
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            // Re-initialize all Flowbite components in the swapped content
+            if (typeof initFlowbite === 'function') {
+                initFlowbite();
+            }
+        });
+        
+        // Re-initialize Flowbite components after browser navigation (back/forward buttons)
+        window.addEventListener('popstate', function(event) {
+            // Small delay to ensure DOM is ready
+            setTimeout(function() {
+                if (typeof initFlowbite === 'function') {
+                    initFlowbite();
+                }
+            }, 100);
+        });
+        
+        // Re-initialize Flowbite components when page is shown (including from cache)
+        window.addEventListener('pageshow', function(event) {
+            // Only re-initialize if page was loaded from cache (persisted)
+            if (event.persisted) {
+                if (typeof initFlowbite === 'function') {
+                    initFlowbite();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

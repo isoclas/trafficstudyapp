@@ -1,0 +1,46 @@
+{% from "macros/components.html" import study_list_item %}
+
+<div id="studies-list" class="fade-me-in">
+    <!-- <h5 class="text-xl font-bold dark:text-white mb-5">Studies</h5> -->
+    {% if studies %}
+        <div class="relative">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-2 py-3">
+                            Study / Analyst
+                        </th>
+                        <th scope="col" class="px-2 py-3">
+                            Date
+                        </th>
+                        <th scope="col" class="px-2 py-3">
+                            Configs
+                        </th>
+                        <th scope="col" class="px-2 py-3">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for study in studies %}
+                        {{ study_list_item(study) }}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </div>
+    {% else %}
+        {% if request.args.get('q') %}
+            {# Display when search yields no results #}
+            <div class="flex flex-col items-center justify-center gap-4 py-8">
+                <img src="{{ url_for('static', filename='images/search_not_found.png') }}" alt="No results found" class="w-60 h-60 object-contain opacity-80">
+                <p class="mynerve text-2xl text-gray-600 dark:text-gray-400 opacity-80">Oops! No studies found</p>
+            </div>
+        {% else %}
+            {# Display when there are no studies at all #}
+            <div class="flex flex-col items-center justify-center gap-4 py-8">
+                <img src="{{ url_for('static', filename='images/no_studies.png') }}" alt="No studies yet" class="w-60 h-60 object-contain opacity-80">
+                <p class="mynerve text-2xl text-gray-600 dark:text-gray-400 opacity-80">Create your first study above</p>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>

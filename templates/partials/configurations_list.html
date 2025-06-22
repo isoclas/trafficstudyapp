@@ -1,0 +1,40 @@
+{% from "macros/components.html" import collapsible %}
+<div id="configurations-list" class="fade-me-in">
+
+    <!--<h2 class="mt-4">Configurations</h2>-->
+    {% if configurations %}
+        <div class="hs-accordion-group">
+            {% for config in configurations %}
+                {% call collapsible(
+                    id="config-" ~ config.id,
+                    title=config.name,
+                    badges=[
+                        "Number of Phases: " ~ config.phases_n,
+                        "Background Distribution: " ~ ('Yes' if config.include_bg_dist else 'No'),
+                        "Background Assignment: " ~ ('Yes' if config.include_bg_assign else 'No'),
+                        "Trip Distribution: " ~ ('Yes' if config.include_trip_dist else 'No') ~ ((' (' ~ config.trip_dist_count ~ ' distributions)') if config.include_trip_dist and config.trip_dist_count > 1 else ''),
+                        "Trip Assignment: " ~ ('Yes' if config.include_trip_assign else 'No')
+                    ],
+                    study_id=study_id,
+                    config_id=config.id
+                ) %}
+                    <div class="scenarios-container"
+                         hx-get="{{ url_for('frontend.get_scenarios_for_config', study_id=study_id, config_id=config.id) }}"
+                         hx-trigger="load"
+                         hx-indicator=".scenarios-spinner-{{ config.id }}">
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border scenarios-spinner-{{ config.id }}" role="status">
+                                <span class="visually-hidden">Loading scenarios...</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endcall %}
+            {% endfor %}
+        </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center gap-4 py-8">
+        <img src="{{ url_for('static', filename='images/create_config.png') }}" alt="No studies yet" class="w-60 h-60 object-contain opacity-80">
+        <p class="mynerve text-2xl font-normal text-gray-600 dark:text-gray-400 opacity-80">Create your first configuration above</p>
+    </div>
+    {% endif %}
+</div>

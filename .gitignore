@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+package-lock.json
+
+# Flask
+instance/
+uploads/
+outputs/
+
+# Env
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db

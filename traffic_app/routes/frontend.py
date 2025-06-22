@@ -740,4 +740,20 @@ def delete_scenario_file_interactive(study_id, scenario_id, file_type_id):
     
     return response
 
+@frontend_bp.route('/delete_confirmation')
+def show_delete_confirmation():
+    """Show delete confirmation modal."""
+    message = request.args.get('message', 'Are you sure you want to delete this item?')
+    delete_url = request.args.get('delete_url', '')
+    method = request.args.get('method', 'delete')
+    target = request.args.get('target', '#content')
+    swap = request.args.get('swap', 'innerHTML')
+    
+    return render_template('partials/delete_confirmation.html', 
+                         message=message,
+                         delete_url=delete_url,
+                         method=method,
+                         target=target,
+                         swap=swap)
+
 # --- END OF traffic_app/routes/frontend.py ---

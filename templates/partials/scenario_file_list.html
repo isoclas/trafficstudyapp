@@ -35,10 +35,14 @@
                             </div>
                             <div class="inline-flex self-center items-center">
                                 <button class="cursor-pointer btn btn-sm btn-danger file-delete-btn" type="button"
-                                        hx-post="{{ url_for('frontend.delete_scenario_file_interactive', study_id=study_id, scenario_id=scenario['id'], file_type_id=file_info.file_type_id) }}"
-                                        hx-target="#file-upload-and-actions"
-                                        hx-swap="innerHTML"
-                                        hx-confirm="Are you sure you want to delete {{ file_info.original_name }} ({{ file_info.file_type_label }})?">
+                                        hx-get="{{ url_for('frontend.show_delete_confirmation', 
+                                                    message='Are you sure you want to delete ' + file_info.original_name + ' (' + file_info.file_type_label + ')?',
+                                                    delete_url=url_for('frontend.delete_scenario_file_interactive', study_id=study_id, scenario_id=scenario['id'], file_type_id=file_info.file_type_id),
+                                                    method='post',
+                                                    target='#file-upload-and-actions',
+                                                    swap='innerHTML') }}"
+                                        hx-target="body"
+                                        hx-swap="beforeend">
                                     <svg class="w-5 h-5 text-gray-600 hover:text-red-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
                                     </svg>

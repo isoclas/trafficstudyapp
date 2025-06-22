@@ -1,5 +1,59 @@
+<br>
 <div class="scenario-status-container fade-me-in">
-    <p><strong>Status:</strong> {{ scenario['status'] }}</p>
-    <p><strong>Message:</strong> {{ scenario['status_message'] or 'No message' }}</p>
+    <div class="small text-muted">
+        <ol class="flex items-center w-full">
+            <li class="relative flex items-center flex-1">
+                {% if scenario['has_am_csv'] %}
+                <div class="z-10 flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full ring-0 ring-white dark:bg-blue-900 sm:ring-8 dark:ring-gray-900 shrink-0 mr-2">
+                    <svg class="w-2.5 h-2.5 text-blue-100 dark:text-blue-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                </div>
+                {% else %}
+                <div class="z-10 flex items-center justify-center w-6 h-6 bg-gray-200 rounded-full ring-0 ring-white dark:bg-gray-700 sm:ring-8 dark:ring-gray-900 shrink-0 mr-2">
+                    <svg class="w-2.5 h-2.5 text-gray-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-white mr-2 sm:mr-4 whitespace-nowrap">AM CSV</span>
+                <div class="flex flex-1 bg-gray-200 h-0.5 dark:bg-gray-700"></div>
+            </li>
+            <li class="relative flex items-center flex-1">
+                {% if scenario['has_pm_csv'] %}
+                <div class="z-10 flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full ring-0 ring-white dark:bg-blue-900 sm:ring-8 dark:ring-gray-900 shrink-0 mr-2 ml-2 sm:ml-4">
+                    <svg class="w-2.5 h-2.5 text-blue-100 dark:text-blue-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                </div>
+                {% else %}
+                <div class="z-10 flex items-center justify-center w-6 h-6 bg-gray-200 rounded-full ring-0 ring-white dark:bg-gray-700 sm:ring-8 dark:ring-gray-900 shrink-0 mr-2 ml-2 sm:ml-4">
+                    <svg class="w-2.5 h-2.5 text-gray-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-white mr-2 sm:mr-4 whitespace-nowrap">PM CSV</span>
+                <div class="flex flex-1 bg-gray-200 h-0.5 dark:bg-gray-700"></div>
+            </li>
+            <li class="relative flex items-center">
+                {% if scenario['has_attout'] %}
+                <div class="z-10 flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full ring-0 ring-white dark:bg-blue-900 sm:ring-8 dark:ring-gray-900 shrink-0 mr-2 ml-2 sm:ml-4">
+                    <svg class="w-2.5 h-2.5 text-blue-100 dark:text-blue-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                </div>
+                {% else %}
+                <div class="z-10 flex items-center justify-center w-6 h-6 bg-gray-200 rounded-full ring-0 ring-white dark:bg-gray-700 sm:ring-8 dark:ring-gray-900 shrink-0 mr-2 ml-2 sm:ml-4">
+                    <svg class="w-2.5 h-2.5 text-gray-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5.917 5.724 10.5 15 1.5"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-white whitespace-nowrap">ATTOUT TXT</span>
+            </li>
+        </ol>
+    </div>
+    <!-- <p><strong>Message:</strong> {{ scenario['status_message'] or 'No message' }}</p> -->
     {% include 'partials/scenario_file_list.html' %}
 </div>

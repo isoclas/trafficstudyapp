@@ -1,14 +1,30 @@
 {# templates/partials/scenario_file_list.html #}
-<div class="uploaded-files-list mb-3">
+<br>
+<div class="uploaded-files-list mb-3 mt-3">
     {% if scenario['uploaded_files'] and scenario['uploaded_files']|length > 0 %}
         <div class="space-y-3">
             {% for file_info in scenario['uploaded_files'] %}
                 {% if file_info.is_uploaded %}
-                    <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700">
-                        <div class="flex items-start bg-gray-50 dark:bg-gray-600 rounded-xl p-2">
-                            <div class="me-2">
-                                <span class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white pb-2">
-                                    <svg fill="none" aria-hidden="true" class="w-5 h-5 shrink-0" viewBox="0 0 20 21">
+                        <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                            <div class="flex items-center gap-3">
+                                {% if 'CSV' in file_info.file_type_label.upper() %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="w-8 h-8 shrink-0" id="csv">
+                                        <path fill="#eee" d="M55 18H42V5a1 1 0 0 0-1-1H13a1 1 0 0 0-1 1v28a1 1 0 0 0 1 1h27v16H13a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h42a1 1 0 0 0 1-1V19a1 1 0 0 0-1-1Z"></path>
+                                        <rect width="34" height="20" x="8" y="32" fill="#66bb6a" rx="1" ry="1"></rect>
+                                        <path fill="#e0e0e0" d="m55.71 18.29-14-14A1 1 0 0 0 40 5v14a1 1 0 0 0 1 1h14a1 1 0 0 0 .71-1.71Z"></path>
+                                        <path fill="#fff" d="M19 43.32h1.8a3.15 3.15 0 0 1-.6 1.52 3.22 3.22 0 0 1-1.2.96 3.86 3.86 0 0 1-1.61.35A3.58 3.58 0 0 1 14.62 45a4.19 4.19 0 0 1-1.08-3 4.29 4.29 0 0 1 1.06-3 3.47 3.47 0 0 1 2.69-1.18A3.52 3.52 0 0 1 20 39a3.43 3.43 0 0 1 .79 1.76H19a1.57 1.57 0 0 0-.59-.88 1.91 1.91 0 0 0-1.1-.31 1.86 1.86 0 0 0-1.49.68 2.66 2.66 0 0 0-.56 1.75 2.6 2.6 0 0 0 .58 1.75 1.88 1.88 0 0 0 1.5.67 1.66 1.66 0 0 0 1.66-1.1zm3.35.3H24a1.37 1.37 0 0 0 1.49 1.08 1.42 1.42 0 0 0 .88-.25.8.8 0 0 0 .33-.67.77.77 0 0 0-.55-.78q-.11 0-1-.3a5.89 5.89 0 0 1-1.78-.7 2 2 0 0 1-.82-1.7 2.27 2.27 0 0 1 .75-1.78 2.85 2.85 0 0 1 2-.67 3.15 3.15 0 0 1 2 .62 2 2 0 0 1 .82 1.6h-1.67a1 1 0 0 0-1.13-.78 1.25 1.25 0 0 0-.77.22.71.71 0 0 0-.29.59.65.65 0 0 0 .36.62 5.64 5.64 0 0 0 1.25.36 4.82 4.82 0 0 1 1.58.56 2.17 2.17 0 0 1 1 1.91 2.38 2.38 0 0 1-1.13 2.12 3.41 3.41 0 0 1-1.87.46A3 3 0 0 1 22.83 45a2.9 2.9 0 0 1-.48-1.38zM32.26 46l-3-8h1.79L33 43.4l1.67-5.4h1.75l-2.65 8v"></path>
+                                    </svg>
+                                {% elif 'TXT' in file_info.file_type_label.upper() or 'ATTOUT' in file_info.file_type_label.upper() %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="w-8 h-8 shrink-0" id="txt">
+                                    <path fill="#eee" d="M55 18H42V5a1 1 0 0 0-1-1H13a1 1 0 0 0-1 1v28a1 1 0 0 0 1 1h27v16H13a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h42a1 1 0 0 0 1-1V19a1 1 0 0 0-1-1Z"/>
+                                    <rect width="34" height="20" x="8" y="32" fill="#2196f3" rx="1" ry="1"/>
+                                    <path fill="#e0e0e0" d="m55.71 18.29-14-14A1 1 0 0 0 40 5v14a1 1 0 0 0 1 1h14a1 1 0 0 0 .71-1.71Z"/>
+                                    <!-- Proper TXT Text -->
+                                    <text x="16" y="46" fill="#fff" font-size="10" font-family="Arial, sans-serif" font-weight="bold">TXT</text>
+                                  </svg>
+                                  
+                                {% else %}
+                                    <svg fill="none" aria-hidden="true" class="w-8 h-8 shrink-0" viewBox="0 0 20 21">
                                         <g clip-path="url(#clip0_3173_1381)">
                                             <path fill="#E2E5E7" d="M5.024.5c-.688 0-1.25.563-1.25 1.25v17.5c0 .688.562 1.25 1.25 1.25h12.5c.687 0 1.25-.563 1.25-1.25V5.5l-5-5h-8.75z"/>
                                             <path fill="#B0B7BD" d="M15.024 5.5h3.75l-5-5v3.75c0 .688.562 1.25 1.25 1.25z"/>
@@ -23,18 +39,25 @@
                                             </clipPath>
                                         </defs>
                                     </svg>
-                                    {{ file_info.original_name }}
-                                </span>
-                                <span class="flex text-xs font-normal text-gray-500 dark:text-gray-400 gap-2">
-                                    {{ file_info.file_type_label }}
-                                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="self-center" width="3" height="4" viewBox="0 0 3 4" fill="none">
-                                        <circle cx="1.5" cy="2" r="1.5" fill="#6B7280"/>
-                                    </svg>
-                                    File
-                                </span>
+                                {% endif %}
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {{ file_info.original_name }}
+                                    </span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ file_info.file_type_label }}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="inline-flex self-center items-center">
-                                <button class="cursor-pointer btn btn-sm btn-danger file-delete-btn" type="button"
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
+                                    {% if file_info.file_size_formatted %}
+                                        {{ file_info.file_size_formatted }}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </span>
+                                <button class="cursor-pointer p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 file-delete-btn" type="button"
                                         hx-get="{{ url_for('frontend.show_delete_confirmation', 
                                                     message='Are you sure you want to delete ' + file_info.original_name + ' (' + file_info.file_type_label + ')?',
                                                     delete_url=url_for('frontend.delete_scenario_file_interactive', study_id=study_id, scenario_id=scenario['id'], file_type_id=file_info.file_type_id),
@@ -42,14 +65,14 @@
                                                     target='#file-upload-and-actions',
                                                     swap='innerHTML') }}"
                                         hx-target="body"
-                                        hx-swap="beforeend">
-                                    <svg class="w-5 h-5 text-gray-600 hover:text-red-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        hx-swap="beforeend"
+                                        title="Delete file">
+                                    <svg class="w-4 h-4 text-gray-400 hover:text-red-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
                                     </svg>
                                 </button>
                             </div>
                         </div>
-                    </div>
                 {% endif %}
             {% endfor %}
         </div>

@@ -1,17 +1,11 @@
-<h2 class="mt-4">Actions</h2>
-<form id="process-form" hx-post="{{ url_for('frontend.process_scenario_frontend', study_id=study_id, scenario_id=scenario['id']) }}"
+<form id="process-form" class="flex justify-center mt-8" hx-post="{{ url_for('frontend.process_scenario_frontend', study_id=study_id, scenario_id=scenario['id']) }}"
       hx-target="#process-response"
       hx-swap="innerHTML"
       hx-indicator=".process-indicator">
-    <button type="submit" class="btn btn-success" {% if not scenario['has_am_csv'] or not scenario['has_pm_csv'] or not scenario['has_attout'] %}disabled{% endif %}>
+    <button type="submit" class="cursor-pointer px-5 py-3 text-base font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50 disabled:cursor-not-allowed" {% if not scenario['has_am_csv'] or not scenario['has_pm_csv'] or not scenario['has_attout'] %}disabled{% endif %}>
         <span class="htmx-indicator spinner-border spinner-border-sm process-indicator" role="status" aria-hidden="true"></span>
         Process Scenario
     </button>
-    <!-- Debug info to help troubleshoot -->
-    <div class="mt-2 small text-muted">
-        Current status: {{ scenario['status'] }}<br>
-        Files: AM CSV: {{ scenario['has_am_csv'] }}, PM CSV: {{ scenario['has_pm_csv'] }}, ATTOUT: {{ scenario['has_attout'] }}
-    </div>
 </form>
 <!-- Hidden target element for the form response -->
 <div id="process-response" class="d-none"></div>

@@ -1,5 +1,6 @@
 # --- START OF traffic_app/api_client.py ---
 import logging
+import os
 import requests
 from datetime import datetime
 from flask import url_for, current_app
@@ -53,7 +54,9 @@ def get_studies() -> Tuple[List[Dict[str, Any]], Optional[str]]:
                 "id": s.id,
                 "name": s.name,
                 "analyst_name": s.analyst_name,
-                "created_at": s.created_at.isoformat() if s.created_at else None
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "configurations_count": len(s.configurations),
+                "scenarios_count": len(s.scenarios)
             } for s in study_objects]
         except Exception as e:
             error = f'Database error fetching studies: {e}'
@@ -434,25 +437,56 @@ def get_scenario_status(study_id: int, scenario_id: int) -> Tuple[Dict[str, Any]
                 error = 'Scenario not found.'
                 return scenario_data, error
             
-            # Build uploaded files info
+            # Build uploaded files info with file sizes
+            def get_file_size(file_path):
+                """Get file size in bytes, return None if file doesn't exist"""
+                if not file_path:
+                    return None
+                try:
+                    abs_path = get_absolute_path(file_path)
+                    if abs_path and os.path.exists(abs_path):
+                        return os.path.getsize(abs_path)
+                except Exception:
+                    pass
+                return None
+            
+            def format_file_size(size_bytes):
+                """Format file size in human readable format"""
+                if size_bytes is None:
+                    return None
+                if size_bytes == 0:
+                    return "0 B"
+                size_names = ["B", "KB", "MB", "GB"]
+                i = 0
+                while size_bytes >= 1024 and i < len(size_names) - 1:
+                    size_bytes /= 1024.0
+                    i += 1
+                return f"{size_bytes:.1f} {size_names[i]}"
+            
             uploaded_files_info = [
                 {
                     "file_type_id": "am_csv",
                     "file_type_label": "AM CSV",
                     "original_name": scenario.am_csv_original_name,
-                    "is_uploaded": bool(scenario.am_csv_path)
+                    "is_uploaded": bool(scenario.am_csv_path),
+                    "file_size_bytes": get_file_size(scenario.am_csv_path),
+                    "file_size_formatted": format_file_size(get_file_size(scenario.am_csv_path))
                 },
                 {
                     "file_type_id": "pm_csv",
                     "file_type_label": "PM CSV",
                     "original_name": scenario.pm_csv_original_name,
-                    "is_uploaded": bool(scenario.pm_csv_path)
+                    "is_uploaded": bool(scenario.pm_csv_path),
+                    "file_size_bytes": get_file_size(scenario.pm_csv_path),
+                    "file_size_formatted": format_file_size(get_file_size(scenario.pm_csv_path))
                 },
                 {
                     "file_type_id": "attout_txt",
                     "file_type_label": "ATTOUT TXT",
                     "original_name": scenario.attout_txt_original_name,
-                    "is_uploaded": bool(scenario.attout_txt_path)
+                    "is_uploaded": bool(scenario.attout_txt_path),
+                    "file_size_bytes": get_file_size(scenario.attout_txt_path),
+                    "file_size_formatted": format_file_size(get_file_size(scenario.attout_txt_path))
                 }
             ]
             
@@ -1183,11 +1217,57 @@ def delete_scenario_file_api(study_id: int, scenario_id: int, file_type_id: str)
                 logging.error(f"API Client: Database error committing changes after file deletion for scenario {scenario_id}: {e}")
                 return False, error
             
-            # Return the updated scenario status
+            # Return the updated scenario status with file sizes
+            def get_file_size(file_path):
+                """Get file size in bytes, return None if file doesn't exist"""
+                if not file_path:
+                    return None
+                try:
+                    abs_path = get_absolute_path(file_path)
+                    if abs_path and os.path.exists(abs_path):
+                        return os.path.getsize(abs_path)
+                except Exception:
+                    pass
+                return None
+            
+            def format_file_size(size_bytes):
+                """Format file size in human readable format"""
+                if size_bytes is None:
+                    return None
+                if size_bytes == 0:
+                    return "0 B"
+                size_names = ["B", "KB", "MB", "GB"]
+                i = 0
+                while size_bytes >= 1024 and i < len(size_names) - 1:
+                    size_bytes /= 1024.0
+                    i += 1
+                return f"{size_bytes:.1f} {size_names[i]}"
+            
             updated_uploaded_files_info = [
-                {"file_type_id": "am_csv", "file_type_label": "AM CSV", "original_name": scenario.am_csv_original_name, "is_uploaded": bool(scenario.am_csv_path)},
-                {"file_type_id": "pm_csv", "file_type_label": "PM CSV", "original_name": scenario.pm_csv_original_name, "is_uploaded": bool(scenario.pm_csv_path)},
-                {"file_type_id": "attout_txt", "file_type_label": "ATTOUT TXT", "original_name": scenario.attout_txt_original_name, "is_uploaded": bool(scenario.attout_txt_path)}
+                {
+                    "file_type_id": "am_csv", 
+                    "file_type_label": "AM CSV", 
+                    "original_name": scenario.am_csv_original_name, 
+                    "is_uploaded": bool(scenario.am_csv_path),
+                    "file_size_bytes": get_file_size(scenario.am_csv_path),
+                    "file_size_formatted": format_file_size(get_file_size(scenario.am_csv_path))
+                },
+                {
+                    "file_type_id": "pm_csv", 
+                    "file_type_label": "PM CSV", 
+                    "original_name": scenario.pm_csv_original_name, 
+                    "is_uploaded": bool(scenario.pm_csv_path),
+                    "file_size_bytes": get_file_size(scenario.pm_csv_path),
+                    "file_size_formatted": format_file_size(get_file_size(scenario.pm_csv_path))
+                },
+                {
+                    "file_type_id": "attout_txt", 
+                    "file_type_label": "ATTOUT TXT", 
+                    "original_name": scenario.attout_txt_original_name, 
+                    "is_uploaded": bool(scenario.attout_txt_path),
+                    "file_size_bytes": get_file_size(scenario.attout_txt_path),
+                    "file_size_formatted": format_file_size(get_file_size(scenario.attout_txt_path))
+                }
             ]
             
             response_data = {

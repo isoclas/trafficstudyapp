@@ -461,6 +461,7 @@ def get_scenario_status(study_id: int, scenario_id: int) -> Tuple[Dict[str, Any]
                 'scenario_id': scenario.id,
                 'id': scenario.id,
                 'configuration_id': scenario.configuration_id,
+                'configuration_name': config.name,
                 'name': scenario.name,
                 'created_at': scenario.created_at.isoformat() if scenario.created_at else None,
                 'updated_at': scenario.updated_at.isoformat() if scenario.updated_at else None,

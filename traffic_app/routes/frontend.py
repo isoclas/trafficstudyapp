@@ -711,7 +711,20 @@ def delete_scenario_file_interactive(study_id, scenario_id, file_type_id):
         flash(f"Could not delete file: {message_or_data}", "danger") # Ensure error is flashed
     else:
         # API call was successful (file deleted, DB updated by API)
-        scenario_data = message_or_data # On success, API client should return the updated scenario data
+        api_response = message_or_data # On success, API client should return the updated scenario data
+        # Convert the API response to the format expected by the template
+        scenario_data = {
+            'id': api_response['scenario_id'],
+            'name': api_response['name'],
+            'status': api_response['status'],
+            'status_message': api_response['status_message'],
+            'uploaded_files': api_response['uploaded_files'],
+            'has_am_csv': api_response['has_am_csv'],
+            'has_pm_csv': api_response['has_pm_csv'],
+            'has_attout': api_response['has_attout'],
+            'has_merged': api_response['has_merged'],
+            'has_attin': api_response['has_attin']
+        }
         flash(f"File '{file_type_id}' deleted successfully.", 'success')
 
     # Always re-render the target area with updated (or current) scenario data

@@ -1,45 +1,54 @@
 {# templates/partials/scenario_file_list.html #}
 <div class="uploaded-files-list mb-3">
     {% if scenario['uploaded_files'] and scenario['uploaded_files']|length > 0 %}
-        <ul class="list-group">
+        <div class="space-y-3">
             {% for file_info in scenario['uploaded_files'] %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div class="file-details flex-grow-1 me-3">
-                        {% if file_info.is_uploaded %}
-                            <span class="file-name fw-bold">{{ file_info.original_name }}</span>
-                        {% else %}
-                            <span class="file-name text-muted fst-italic">Missing {{ file_info.file_type_label }}</span>
-                        {% endif %}
+                {% if file_info.is_uploaded %}
+                    <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700">
+                        <div class="flex items-start bg-gray-50 dark:bg-gray-600 rounded-xl p-2">
+                            <div class="me-2">
+                                <span class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white pb-2">
+                                    <svg fill="none" aria-hidden="true" class="w-5 h-5 shrink-0" viewBox="0 0 20 21">
+                                        <g clip-path="url(#clip0_3173_1381)">
+                                            <path fill="#E2E5E7" d="M5.024.5c-.688 0-1.25.563-1.25 1.25v17.5c0 .688.562 1.25 1.25 1.25h12.5c.687 0 1.25-.563 1.25-1.25V5.5l-5-5h-8.75z"/>
+                                            <path fill="#B0B7BD" d="M15.024 5.5h3.75l-5-5v3.75c0 .688.562 1.25 1.25 1.25z"/>
+                                            <path fill="#CAD1D8" d="M18.774 9.25l-3.75-3.75h3.75v3.75z"/>
+                                            <path fill="#F15642" d="M16.274 16.75a.627.627 0 01-.625.625H1.899a.627.627 0 01-.625-.625V10.5c0-.344.281-.625.625-.625h13.75c.344 0 .625.281.625.625v6.25z"/>
+                                            <path fill="#fff" d="M3.998 12.342c0-.165.13-.345.34-.345h1.154c.65 0 1.235.435 1.235 1.269 0 .79-.585 1.23-1.235 1.23h-.834v.66c0 .22-.14.344-.32.344a.337.337 0 01-.34-.344v-2.814zm.66.284v1.245h.834c.335 0 .6-.295.6-.605 0-.35-.265-.64-.6-.64h-.834zM7.706 15.5c-.165 0-.345-.09-.345-.31v-2.838c0-.18.18-.31.345-.31H8.85c2.284 0 2.234 3.458.045 3.458h-1.19zm.315-2.848v2.239h.83c1.349 0 1.409-2.24 0-2.24h-.83zM11.894 13.486h1.274c.18 0 .36.18.36.355 0 .165-.18.3-.36.3h-1.274v1.049c0 .175-.124.31-.3.31-.22 0-.354-.135-.354-.31v-2.839c0-.18.135-.31.355-.31h1.754c.22 0 .35.13.35.31 0 .16-.13.34-.35.34h-1.455v.795z"/>
+                                            <path fill="#CAD1D8" d="M15.649 17.375H3.774V18h11.875a.627.627 0 00.625-.625v-.625a.627.627 0 01-.625.625z"/>
+                                        </g>
+                                        <defs>
+                                            <clipPath id="clip0_3173_1381">
+                                                <path fill="#fff" d="M0 0h20v20H0z" transform="translate(0 .5)"/>
+                                            </clipPath>
+                                        </defs>
+                                    </svg>
+                                    {{ file_info.original_name }}
+                                </span>
+                                <span class="flex text-xs font-normal text-gray-500 dark:text-gray-400 gap-2">
+                                    {{ file_info.file_type_label }}
+                                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="self-center" width="3" height="4" viewBox="0 0 3 4" fill="none">
+                                        <circle cx="1.5" cy="2" r="1.5" fill="#6B7280"/>
+                                    </svg>
+                                    File
+                                </span>
+                            </div>
+                            <div class="inline-flex self-center items-center">
+                                <button class="cursor-pointer btn btn-sm btn-danger file-delete-btn" type="button"
+                                        hx-post="{{ url_for('frontend.delete_scenario_file_interactive', study_id=study_id, scenario_id=scenario['id'], file_type_id=file_info.file_type_id) }}"
+                                        hx-target="#file-upload-and-actions"
+                                        hx-swap="innerHTML"
+                                        hx-confirm="Are you sure you want to delete {{ file_info.original_name }} ({{ file_info.file_type_label }})?">
+                                    <svg class="w-5 h-5 text-gray-600 hover:text-red-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="file-actions d-flex align-items-center">
-                        <select class="form-select form-select-sm me-2 file-type-select" 
-                                name="file_type_{{ file_info.file_type_id }}" 
-                                data-scenario-id="{{ scenario['id'] }}"
-                                data-current-type="{{ file_info.file_type_id }}"
-                                {% if not file_info.is_uploaded %}disabled{% endif %}>
-                            <option value="am_csv" {% if file_info.file_type_id == 'am_csv' %}selected{% endif %}>AM CSV</option>
-                            <option value="pm_csv" {% if file_info.file_type_id == 'pm_csv' %}selected{% endif %}>PM CSV</option>
-                            <option value="attout_txt" {% if file_info.file_type_id == 'attout_txt' %}selected{% endif %}>ATTOUT TXT</option>
-                        </select>
-                        
-                        {% if file_info.is_uploaded %}
-                            <button class="btn btn-danger btn-sm file-delete-btn"
-                                    hx-post="{{ url_for('frontend.delete_scenario_file_interactive', study_id=study_id, scenario_id=scenario['id'], file_type_id=file_info.file_type_id) }}"
-                                    hx-target="#file-upload-and-actions" 
-                                    hx-swap="innerHTML"
-                                    hx-confirm="Are you sure you want to delete {{ file_info.original_name }} ({{ file_info.file_type_label }})?"
-                                    hx-on::after-request="if(event.detail.successful) { window.location.reload(); }">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        {% else %}
-                            {# Placeholder for alignment or could be an upload button for this specific slot if we want later #}
-                            <div style="width: 38px;"></div> {# Match button width roughly #}
-                        {% endif %}
-                    </div>
-                </li>
+                {% endif %}
             {% endfor %}
-        </ul>
+        </div>
     {% else %}
         <p class="text-muted">No file information available.</p>
     {% endif %}

@@ -1,5 +1,5 @@
 <div class="scenario-status-container fade-me-in">
-    {% include 'partials/scenario_file_list.html' %}
     <p><strong>Status:</strong> {{ scenario['status'] }}</p>
     <p><strong>Message:</strong> {{ scenario['status_message'] or 'No message' }}</p>
+    {% include 'partials/scenario_file_list.html' %}
 </div>

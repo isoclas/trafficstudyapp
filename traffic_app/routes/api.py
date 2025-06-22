@@ -486,8 +486,14 @@ def get_scenario_status(study_id, scenario_id):
             }
         ]
 
+        # Get configuration name
+        config = db.session.get(Configuration, scenario.configuration_id)
+        config_name = config.name if config else "Unknown Configuration"
+        
         return jsonify({
             "id": scenario.id,
+            "configuration_id": scenario.configuration_id,
+            "configuration_name": config_name,
             "name": scenario.name,
             "status": scenario.status.name,
             "status_message": scenario.status_message,

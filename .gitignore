@@ -18,6 +18,11 @@ outputs/
 # VS Code
 .vscode/
 
+# Log files
+*.log
+log.log
+logs/
+
 # OS junk
 .DS_Store
 Thumbs.db

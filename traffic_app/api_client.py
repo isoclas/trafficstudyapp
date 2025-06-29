@@ -50,14 +50,33 @@ def get_studies() -> Tuple[List[Dict[str, Any]], Optional[str]]:
         try:
             # Direct database query instead of HTTP request
             study_objects = Study.query.order_by(Study.created_at.desc()).all()
-            studies = [{
-                "id": s.id,
-                "name": s.name,
-                "analyst_name": s.analyst_name,
-                "created_at": s.created_at.isoformat() if s.created_at else None,
-                "configurations_count": len(s.configurations),
-                "scenarios_count": len(s.scenarios)
-            } for s in study_objects]
+            studies = []
+            for s in study_objects:
+                study_dict = {
+                    "id": s.id,
+                    "name": s.name,
+                    "analyst_name": s.analyst_name,
+                    "created_at": s.created_at.isoformat() if s.created_at else None,
+                    "configurations_count": len(s.configurations),
+                    "scenarios_count": len(s.scenarios),
+                    "configurations": []
+                }
+                # Add full configuration and scenario data for status calculation
+                for config in s.configurations:
+                    config_dict = {
+                        "id": config.id,
+                        "name": config.name,
+                        "scenarios": []
+                    }
+                    for scenario in config.scenarios:
+                        scenario_dict = {
+                            "id": scenario.id,
+                            "name": scenario.name,
+                            "status": {"value": scenario.status.value}
+                        }
+                        config_dict["scenarios"].append(scenario_dict)
+                    study_dict["configurations"].append(config_dict)
+                studies.append(study_dict)
         except Exception as e:
             error = f'Database error fetching studies: {e}'
             logging.error(f"API Client: Database error fetching studies: {e}")
@@ -1124,6 +1143,70 @@ def delete_study(study_id: int) -> Tuple[Dict[str, Any], Optional[str]]:
         except Exception as e:
             error = f'An unexpected error occurred deleting the study: {e}'
             logging.error(f"API Client: Unexpected error deleting study ({api_url}): {e}")
+    
+    return data, error
+
+def update_study(study_id: int, study_data: Dict[str, Any]) -> Tuple[Dict[str, Any], Optional[str]]:
+    """Update a study via the API or database directly.
+    
+    Args:
+        study_id: The ID of the study
+        study_data: Dictionary containing the fields to update
+        
+    Returns:
+        Tuple[Dict, Optional[str]]: (response data, error message if any)
+    """
+    data = {}
+    error = None
+    
+    # Check if we should use internal database calls (for production)
+    if current_app.config.get('USE_INTERNAL_API', False) and Study is not None:
+        try:
+            # Direct database operation instead of HTTP request
+            study = db.session.get(Study, study_id)
+            if not study:
+                error = f"Study {study_id} not found."
+                return data, error
+            
+            # Update study fields
+            if 'name' in study_data:
+                study.name = study_data['name'].strip()
+            if 'analyst_name' in study_data:
+                study.analyst_name = study_data['analyst_name'].strip()
+            
+            db.session.commit()
+            
+            data = {
+                "id": study.id,
+                "name": study.name,
+                "analyst_name": study.analyst_name,
+                "created_at": study.created_at.isoformat() if study.created_at else None,
+                "message": "Study updated successfully"
+            }
+            
+        except Exception as e:
+            db.session.rollback()
+            error = f'Database error updating study: {e}'
+            logging.error(f"API Client: Database error updating study {study_id}: {e}")
+    else:
+        # Original HTTP-based approach for development
+        api_url = url_for('api.update_study', study_id=study_id, _external=True)
+        try:
+            response = requests.put(api_url, json=study_data)
+            data = response.json()
+            
+            if 'created_at' in data:
+                data['created_at'] = _parse_date(data['created_at'])
+                
+            if response.status_code != 200:
+                error = data.get('error', f'Error updating study (API Status: {response.status_code}).')
+                logging.error(f"API Client: API error updating study ({api_url}): {response.status_code} - {response.text}")
+        except requests.RequestException as e:
+            error = f'Error connecting to API to update study: {e}'
+            logging.error(f"API Client: Connection error updating study via API ({api_url}): {e}")
+        except Exception as e:
+            error = f'An unexpected error occurred updating the study: {e}'
+            logging.error(f"API Client: Unexpected error updating study ({api_url}): {e}")
     
     return data, error
 

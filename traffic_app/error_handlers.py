@@ -1,6 +1,6 @@
 # --- START OF traffic_app/error_handlers.py ---
 import logging
-from flask import render_template, jsonify, request, flash
+from flask import render_template, jsonify, request
 from werkzeug.exceptions import HTTPException
 
 def register_error_handlers(app):
@@ -70,12 +70,7 @@ def handle_error(error, default_code=500, default_message='Internal Server Error
         </div>
         """, code
     
-    # For regular requests, flash the error and render the error template
-    if isinstance(error, HTTPException):
-        flash(description, 'error')
-    else:
-        flash(f"An unexpected error occurred: {description}", 'error')
-    
+    # For regular requests, render the error template
     return render_template('error.html', 
                           error_code=code,
                           error_name=default_message,

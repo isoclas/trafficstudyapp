@@ -1,7 +1,7 @@
 # --- START OF traffic_app/routes/frontend.py ---
 import logging
-from datetime import datetime
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify, make_response, session
+from datetime import datetime, timedelta
+from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, make_response, session
 from ..utils import allowed_file # Import from local utils
 from ..extensions import db # Needed for direct DB query for study name
 from ..models import Study, Configuration # Needed for direct DB queries
@@ -25,8 +25,6 @@ def _jinja2_filter_datetime(date_str, fmt=None):
         return date_str
 
 # --- Frontend Routes ---
-
-# Flash messages route removed
 
 @frontend_bp.route('/study/<int:study_id>/delete-confirm')
 def delete_study_confirm(study_id):
@@ -93,37 +91,110 @@ def delete_scenario_confirm(study_id, scenario_id, config_id=None):
                           target=target,
                           swap="innerHTML")
 
-# Clear flashes route removed
-
 @frontend_bp.route('/search-studies')
 def search_studies():
-    """Route to search studies by name or analyst."""
+    """Route to search studies by name or analyst with date filtering."""
+    from datetime import datetime, timedelta
+    
     search_query = request.args.get('q', '').strip().lower()
+    date_filter = request.args.get('date-filter', '30')  # Default to 30 days
 
     # Fetch all studies from API (already sorted by created_at desc)
     studies, error = api_client.get_studies()
 
     if error:
         logging.error(f"Error in search_studies: {error}")
-    elif search_query:
-        # Filter studies based on search query
-        filtered_studies = []
+        return render_template('partials/studies_list.html', studies=[])
+
+    # Apply date filtering
+    if date_filter != 'all':
+        try:
+            days = int(date_filter)
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            filtered_by_date = []
+            for study in studies:
+                created_at_str = study.get('created_at')
+                if created_at_str:
+                    try:
+                        # Parse the date string
+                        if isinstance(created_at_str, str):
+                            created_at = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                        else:
+                            created_at = created_at_str
+                        
+                        # Remove timezone info for comparison if present
+                        if created_at.tzinfo:
+                            created_at = created_at.replace(tzinfo=None)
+                        
+                        if created_at >= cutoff_date:
+                            filtered_by_date.append(study)
+                    except (ValueError, AttributeError) as e:
+                        logging.warning(f"Error parsing date {created_at_str}: {e}")
+                        # Include studies with unparseable dates to be safe
+                        filtered_by_date.append(study)
+            
+            studies = filtered_by_date
+        except ValueError:
+            logging.warning(f"Invalid date filter value: {date_filter}")
+    
+    # Apply search query filtering
+    if search_query:
+        filtered_by_search = []
         for study in studies:
             study_name = study.get('name', '').lower()
             analyst_name = study.get('analyst_name', '').lower()
             if search_query in study_name or search_query in analyst_name:
-                filtered_studies.append(study)
-        studies = filtered_studies
+                filtered_by_search.append(study)
+        studies = filtered_by_search
 
     return render_template('partials/studies_list.html', studies=studies)
 
 @frontend_bp.route('/')
 def index():
     """Render the home page with a list of studies."""
+    from datetime import datetime, timedelta
+    
+    # Get date filter parameter (default to 30 days)
+    date_filter = request.args.get('date-filter', '30')
+    
     studies, error = api_client.get_studies()
 
     if error:
-        flash(error, 'error')
+        logging.error(error)
+        return render_template('index.html', studies=[])
+    
+    # Apply date filtering (same logic as search_studies)
+    if date_filter != 'all':
+        try:
+            days = int(date_filter)
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            filtered_studies = []
+            for study in studies:
+                created_at_str = study.get('created_at')
+                if created_at_str:
+                    try:
+                        # Parse the date string
+                        if isinstance(created_at_str, str):
+                            created_at = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                        else:
+                            created_at = created_at_str
+                        
+                        # Remove timezone info for comparison if present
+                        if created_at.tzinfo:
+                            created_at = created_at.replace(tzinfo=None)
+                        
+                        if created_at >= cutoff_date:
+                            filtered_studies.append(study)
+                    except (ValueError, AttributeError) as e:
+                        logging.warning(f"Error parsing date {created_at_str}: {e}")
+                        # Include studies with unparseable dates to be safe
+                        filtered_studies.append(study)
+            
+            studies = filtered_studies
+        except ValueError:
+            logging.warning(f"Invalid date filter value: {date_filter}")
 
     return render_template('index.html', studies=studies)
 
@@ -133,7 +204,7 @@ def study(study_id):
     # Fetch study details directly from DB
     study_obj = db.session.get(Study, study_id)
     if not study_obj:
-        flash('Study not found.', 'error')
+        logging.error('Study not found.')
         return redirect(url_for('frontend.index'))
 
     study_name = study_obj.name
@@ -143,7 +214,7 @@ def study(study_id):
     configurations, error = api_client.get_configurations(study_id)
 
     if error:
-        flash(error, 'error')
+        logging.error(f"Error fetching configurations for study {study_id}: {error}")
         return redirect(url_for('frontend.index'))
 
     return render_template('study.html', study_id=study_id, study_name=study_name,
@@ -175,10 +246,9 @@ def create_study_frontend():
             message = error or f'Error creating study (API Status: {status_code}).'
             status = 'danger'
 
-    # Add flash message
-    flash(message, status)
+    logging.info(message)
 
-    # If it's an HTMX request, return the updated studies list with HX-Trigger for flash message
+    # If it's an HTMX request, return the updated studies list
     if request.headers.get('HX-Request'):
         # Fetch the updated studies list
         studies, error = api_client.get_studies()
@@ -196,7 +266,7 @@ def configure_study_frontend(study_id):
     """Configure a study with scenarios."""
     config_name = request.form.get('config_name', '').strip()
     if not config_name:
-        flash('Configuration name is required.', 'error')
+        logging.error('Configuration name is required.')
         if request.headers.get('HX-Request'):
             response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id))
             return response
@@ -218,7 +288,7 @@ def configure_study_frontend(study_id):
         trip_dist_count = 1
 
     if phases_n is None or phases_n < 0:
-        flash('Number of phases must be a valid non-negative number.', 'error')
+        logging.error('Number of phases must be a valid non-negative number.')
         if request.headers.get('HX-Request'):
             response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id))
             return response
@@ -242,10 +312,9 @@ def configure_study_frontend(study_id):
             message = error or f'Error creating configuration.'
             status = 'danger'
 
-        # Add flash message
-        flash(message, status)
 
-    # If it's an HTMX request, return the updated configurations list with HX-Trigger for flash message
+
+    # If it's an HTMX request, return the updated configurations list
     if request.headers.get('HX-Request'):
         # Fetch the updated configurations list
         configurations, error = api_client.get_configurations(study_id)
@@ -505,9 +574,9 @@ def delete_configuration(study_id, config_id):
     data, error = api_client.delete_configuration(study_id, config_id)
 
     if error:
-        flash(error, 'error')
+        logging.error(error)
     else:
-        flash('Configuration deleted successfully!', 'success')
+        logging.info('Configuration deleted successfully!')
 
     # Return the updated configurations list
     configurations, error = api_client.get_configurations(study_id)
@@ -524,18 +593,12 @@ def delete_scenario(study_id, scenario_id):
     data, error = api_client.delete_scenario(study_id, scenario_id)
 
     if error:
-        flash(error, 'error')
         logging.error(f"Frontend: Error deleting scenario {scenario_id}: {error}")
-
         # If we couldn't delete the scenario and it's an HTMX request, return an error message
         if request.headers.get('HX-Request'):
             return f"<div class='alert alert-danger'>Error refreshing scenarios list after deletion.</div>"
     else:
-        flash('Scenario deleted successfully!', 'success')
-        # Get the configuration ID from the response
-        config_id = data.get('configuration_id')
         logging.info(f"Frontend: Scenario deleted successfully, config_id: {config_id}")
-
         # If we have a configuration ID, return the updated scenarios list for that configuration
         if config_id and request.headers.get('HX-Request'):
             logging.info(f"Frontend: Returning updated scenarios list for config {config_id}")
@@ -579,8 +642,7 @@ def delete_scenario_post(study_id, scenario_id):
         if not config_id:
             config_id = data.get('configuration_id')
 
-    # Add flash message
-    flash(message, status)
+    logging.info(message)
 
     # If it's an HTMX request and we have a configuration ID, return the updated scenarios list
     if request.headers.get('HX-Request') and config_id:
@@ -597,13 +659,13 @@ def delete_scenario_post(study_id, scenario_id):
             """
             response = make_response(html_content)
 
-        # Flash message trigger removed
+
         return response
 
     # If it's an HTMX request but we couldn't get the configuration ID, return an error message
     if request.headers.get('HX-Request'):
         response = make_response(f"<div class='alert alert-danger'>Error refreshing scenarios list after deletion.</div>")
-        # Flash message trigger removed
+    
         return response
 
     # For regular requests or if something went wrong, redirect back to the study page
@@ -625,10 +687,9 @@ def delete_configuration_post(study_id, config_id):
         status = 'success'
         logging.info(f"Frontend: Configuration {config_id} deleted successfully")
 
-    # Add flash message
-    flash(message, status)
+    logging.info(message)
 
-    # If it's an HTMX request, return the updated configurations list with HX-Trigger for flash message
+    # If it's an HTMX request, return the updated configurations list
     if request.headers.get('HX-Request'):
         # Fetch the updated configurations list
         configurations, error = api_client.get_configurations(study_id)
@@ -636,7 +697,7 @@ def delete_configuration_post(study_id, config_id):
             logging.error(f"Error fetching configurations for HTMX response: {error}")
 
         response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id))
-        # Flash message trigger removed
+
         return response
 
     # For regular requests, redirect to study page
@@ -651,7 +712,7 @@ def get_configurations_list(study_id):
 
     if error:
         logging.error(f"Error fetching configurations for study {study_id}: {error}")
-        flash(f"Error loading configurations: {error}", "error")
+        logging.error(f"Error loading configurations: {error}")
 
     return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
 
@@ -671,10 +732,9 @@ def delete_study_post(study_id):
         status = 'success'
         logging.info(f"Frontend: Study {study_id} deleted successfully")
 
-    # Add flash message
-    flash(message, status)
+    logging.info(message)
 
-    # If it's an HTMX request, return the updated studies list with HX-Trigger for flash message
+    # If it's an HTMX request, return the updated studies list
     if request.headers.get('HX-Request'):
         # Fetch the updated studies list
         studies, error = api_client.get_studies()
@@ -682,11 +742,93 @@ def delete_study_post(study_id):
             logging.error(f"Error fetching studies for HTMX response: {error}")
 
         response = make_response(render_template('partials/studies_list.html', studies=studies))
-        # Flash message trigger removed
+
         return response
 
     # For regular requests, redirect to index
     return redirect(url_for('frontend.index'))
+
+@frontend_bp.route('/study/<int:study_id>/edit')
+def edit_study_modal(study_id):
+    """Show edit study modal."""
+    # Get study details
+    study_obj = db.session.get(Study, study_id)
+    if not study_obj:
+        return "<div class='alert alert-danger'>Study not found</div>"
+
+    return render_template('partials/edit_study_modal.html', study=study_obj)
+
+@frontend_bp.route('/study/<int:study_id>/edit', methods=['POST'])
+def edit_study_post(study_id):
+    """Handles the POST request for editing a study."""
+    logging.info(f"Frontend: POST request received for editing study {study_id}")
+
+    # Get form data
+    name = request.form.get('name')
+    analyst_name = request.form.get('analyst_name')
+
+    if not name or not analyst_name:
+        logging.error('Study name and analyst name are required')
+        return redirect(url_for('frontend.index'))
+
+    # Update study via API
+    data, error = api_client.update_study(study_id, {
+        'name': name,
+        'analyst_name': analyst_name
+    })
+
+    if error:
+        message = f'Error updating study: {error}'
+        status = 'danger'
+        logging.error(f"Frontend: Error updating study {study_id}: {error}")
+    else:
+        message = 'Study updated successfully!'
+        status = 'success'
+        logging.info(f"Frontend: Study {study_id} updated successfully")
+
+    logging.info(message)
+
+    # Check if this is an HTMX request
+    if request.headers.get('HX-Request'):
+        # For HTMX requests, return updated studies list with current filters applied
+        date_filter = request.args.get('date-filter', '30')
+        search_query = request.args.get('q', '')
+        # Robustly ensure date_filter is a valid integer or 'all'
+        if not date_filter or date_filter == '' or date_filter is None:
+            date_filter = '30'
+        # Get all studies first
+        studies, error = api_client.get_studies()
+        if error:
+            logging.error(f"Frontend: Error fetching studies: {error}")
+            studies = []
+        
+        # Apply date filtering first
+        if date_filter != 'all':
+            try:
+                days = int(date_filter)
+            except (ValueError, TypeError):
+                days = 30
+            try:
+                cutoff_date = datetime.now() - timedelta(days=days)
+                studies = [
+                    study for study in studies 
+                    if datetime.fromisoformat(study['created_at'].replace('Z', '+00:00')).replace(tzinfo=None) >= cutoff_date
+                ]
+            except (KeyError, Exception) as e:
+                logging.warning(f"Error parsing study date: {e}")
+        
+        # Apply search filtering on the already date-filtered studies
+        if search_query:
+            studies = [
+                study for study in studies
+                if search_query.lower() in study.get('name', '').lower() or 
+                   search_query.lower() in study.get('analyst_name', '').lower()
+            ]
+        
+        return render_template('partials/studies_list.html', studies=studies)
+    else:
+        # For regular form submissions, redirect to index
+        return redirect(url_for('frontend.index'))
 
 @frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>/delete_file/<string:file_type_id>', methods=['POST'])
 def delete_scenario_file_interactive(study_id, scenario_id, file_type_id):
@@ -699,8 +841,8 @@ def delete_scenario_file_interactive(study_id, scenario_id, file_type_id):
     success, message_or_data = api_client.delete_scenario_file_api(study_id, scenario_id, file_type_id)
 
     if not success:
-        # If the API call itself fails badly or returns a clear error message to flash
-        flash(message_or_data or f"Error deleting file '{file_type_id}'.", 'danger')
+        # If the API call itself fails badly or returns a clear error message
+        logging.error(message_or_data or f"Error deleting file '{file_type_id}'.")
         # How to respond here? If API gives full HTML error, maybe return that.
         # For now, let's assume we need to re-render the status.
         # Fallback: Get current status and re-render. This might not show a specific error from deletion though.
@@ -708,7 +850,7 @@ def delete_scenario_file_interactive(study_id, scenario_id, file_type_id):
         if fetch_error:
             logging.error(f"Error fetching scenario status after failed deletion: {fetch_error}")
             return f"<div id='file-upload-and-actions'><p class='text-danger'>Error deleting file and then error updating status: {fetch_error}</p></div>", 500
-        flash(f"Could not delete file: {message_or_data}", "danger") # Ensure error is flashed
+        logging.error(f"Could not delete file: {message_or_data}")
     else:
         # API call was successful (file deleted, DB updated by API)
         api_response = message_or_data # On success, API client should return the updated scenario data
@@ -725,18 +867,16 @@ def delete_scenario_file_interactive(study_id, scenario_id, file_type_id):
             'has_merged': api_response['has_merged'],
             'has_attin': api_response['has_attin']
         }
-        flash(f"File '{file_type_id}' deleted successfully.", 'success')
+        logging.info(f"File '{file_type_id}' deleted successfully.")
 
     # Always re-render the target area with updated (or current) scenario data
     # This ensures the file list and status reflect the change (or lack thereof if deletion failed but status was fetched)
     status_html = render_template('partials/scenario_status.html', scenario=scenario_data, study_id=study_id)
     process_form_html = render_template('partials/scenario_process_form.html', scenario=scenario_data, study_id=study_id)
     
-    # Ensure the response is correctly recognized as an HTMX partial by setting the HX-Trigger header for flashes
+    # Ensure the response is correctly recognized as an HTMX partial
     # And by returning the HTML snippet that HTMX expects to swap.
     response = make_response(f"<div id='file-upload-and-actions'>{status_html}{process_form_html}</div>")
-    if request.headers.get('HX-Request'):
-        response.headers['HX-Trigger'] = 'flashMessage' # Assuming you have JS to handle this for flashes
     
     return response
 

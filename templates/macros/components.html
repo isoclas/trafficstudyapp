@@ -85,7 +85,7 @@
             <div class="w-24 sm:w-32 md:w-40 lg:w-48 xl:w-56 2xl:w-64 bg-gray-200 rounded-full dark:bg-gray-700 overflow-hidden flex-shrink-0">
                 <div 
                   id="progress-bar-{{ config_id }}"
-                  class="h-2.5 rounded-full bg-blue-500 bg-[repeating-linear-gradient(-45deg,#ffffff_0,#ffffff_2px,transparent_2px,transparent_6px)]" 
+                  class="h-2.5 rounded-full bg-gray-600 bg-[repeating-linear-gradient(-45deg,#ffffff_0,#ffffff_2px,transparent_2px,transparent_6px)]" 
                   style="width: 0%">
                 </div>
             </div>
@@ -226,9 +226,46 @@
         {% endif %}
     </td>
     <td class="px-2 py-4">
-        <div class="flex items-center">
-            <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div> Complete
-        </div>
+        {% set has_configs = study.configurations|length > 0 %}
+        {% if has_configs %}
+            {% set total_scenarios = [] %}
+            {% set completed_scenarios = [] %}
+            {% for config in study.configurations %}
+                {% for scenario in config.scenarios %}
+                    {% set _ = total_scenarios.append(scenario) %}
+                    {% if scenario.status.value == 'COMPLETE' %}
+                        {% set _ = completed_scenarios.append(scenario) %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            {% if total_scenarios|length == 0 %}
+                {# Has configs but no scenarios yet - In Progress #}
+                <div class="flex items-center">
+                    <div class="relative h-3 w-3 me-2">
+                        <div class="h-3 w-3 rounded-full border-2 border-blue-500 absolute"></div>
+                        <div class="h-3 w-1.5 rounded-l-full bg-blue-500 absolute overflow-hidden"></div>
+                    </div> In Progress
+                </div>
+            {% elif completed_scenarios|length == total_scenarios|length %}
+                {# All scenarios complete #}
+                <div class="flex items-center">
+                    <div class="h-3 w-3 rounded-full bg-blue-500 me-2"></div> Completed
+                </div>
+            {% else %}
+                {# Some scenarios in progress #}
+                <div class="flex items-center">
+                    <div class="relative h-3 w-3 me-2">
+                        <div class="h-3 w-3 rounded-full border-2 border-blue-500 absolute"></div>
+                        <div class="h-3 w-1.5 rounded-l-full bg-blue-500 absolute overflow-hidden"></div>
+                    </div> In Progress
+                </div>
+            {% endif %}
+        {% else %}
+            {# No configs yet - Prepped #}
+            <div class="flex items-center">
+                <div class="h-3 w-3 rounded-full border-2 border-blue-500 me-2"></div> Prepped
+            </div>
+        {% endif %}
     </td>
     <td class="px-2 py-4 text-right">
         <button id="dropdownMenuIconButton-{{ study.id }}" data-dropdown-toggle="dropdownDots-{{ study.id }}" data-dropdown-placement="bottom-start" data-dropdown-trigger="click" class="cursor-pointer inline-flex self-center items-center p-2 text-sm font-medium text-center text-gray-900 rounded-lg hover:bg-gray-100 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
@@ -239,11 +276,15 @@
         <div id="dropdownDots-{{ study.id }}" data-dropdown-close-on-click-outside class="text-left z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-30 dark:bg-gray-700 dark:divide-gray-600">
             <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownMenuIconButton-{{ study.id }}">
                 <li>
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit Study</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                       hx-get="{{ url_for('frontend.edit_study_modal', study_id=study.id) }}"
+                       hx-target="#modal-container"
+                       hx-swap="innerHTML"
+                       data-dropdown-hide="dropdownDots-{{ study.id }}">Edit Study</a>
                 </li>
-                <li>
+                <!-- <li>
                     <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">View Notes</a>
-                </li>
+                </li> -->
                 <li>
                     <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                        hx-get="{{ url_for('frontend.delete_study_confirm', study_id=study.id) }}"

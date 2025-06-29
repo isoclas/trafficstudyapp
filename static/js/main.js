@@ -42,4 +42,37 @@
             });
         }, 100);
     });
+    
+    // Handle date filter dropdown functionality
+    document.addEventListener('htmx:afterSwap', function(event) {
+        initializeDateFilters();
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeDateFilters();
+    });
+    
+    function initializeDateFilters() {
+        // Handle date filter radio button changes
+        document.querySelectorAll('input[name="date-filter"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    // Update the dropdown button text
+                    const selectedText = this.nextElementSibling.textContent;
+                    const buttonText = document.getElementById('selected-filter-text');
+                    if (buttonText) {
+                        buttonText.textContent = selectedText;
+                    }
+                    
+                    // Close the dropdown
+                    const dropdown = document.getElementById('dropdownRadio');
+                    if (dropdown) {
+                        dropdown.classList.add('hidden');
+                    }
+                }
+            });
+        });
+    }
+    
 })(); // Close the IIFE

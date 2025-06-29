@@ -62,15 +62,35 @@ def studies():
     else: # GET
         try:
             # Order by created_at in descending order (newest first)
-            studies = Study.query.order_by(Study.created_at.desc()).all()
-            return jsonify([{
-                "id": s.id,
-                "name": s.name,
-                "analyst_name": s.analyst_name,
-                "created_at": s.created_at.isoformat() if s.created_at else None,
-                "configurations_count": len(s.configurations),
-                "scenarios_count": len(s.scenarios)
-            } for s in studies])
+            study_objects = Study.query.order_by(Study.created_at.desc()).all()
+            studies = []
+            for s in study_objects:
+                study_dict = {
+                    "id": s.id,
+                    "name": s.name,
+                    "analyst_name": s.analyst_name,
+                    "created_at": s.created_at.isoformat() if s.created_at else None,
+                    "configurations_count": len(s.configurations),
+                    "scenarios_count": len(s.scenarios),
+                    "configurations": []
+                }
+                # Add full configuration and scenario data for status calculation
+                for config in s.configurations:
+                    config_dict = {
+                        "id": config.id,
+                        "name": config.name,
+                        "scenarios": []
+                    }
+                    for scenario in config.scenarios:
+                        scenario_dict = {
+                            "id": scenario.id,
+                            "name": scenario.name,
+                            "status": {"value": scenario.status.value}
+                        }
+                        config_dict["scenarios"].append(scenario_dict)
+                    study_dict["configurations"].append(config_dict)
+                studies.append(study_dict)
+            return jsonify(studies)
         except Exception as e:
             logging.exception(f"API: Error fetching studies")
             return jsonify({"error": f"Database error: {e}"}), 500
@@ -725,6 +745,51 @@ def delete_scenario(study_id, scenario_id):
         db.session.rollback()
         logging.exception(f"API: Error deleting scenario {scenario_id} from study {study_id}")
         return jsonify({"error": f"Database error during deletion: {e}"}), 500
+
+@api_bp.route('/studies/<int:study_id>', methods=['PUT'])
+def update_study(study_id):
+    """API Endpoint: Update a study's information."""
+    study = db.session.get(Study, study_id)
+    if not study:
+        return jsonify({"error": f"Study {study_id} not found."}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        # Update study fields
+        if 'name' in data:
+            new_name = data['name'].strip()
+            if not new_name:
+                return jsonify({"error": "Study name cannot be empty"}), 400
+            
+            # Check if name already exists (excluding current study)
+            existing_study = Study.query.filter(Study.name == new_name, Study.id != study_id).first()
+            if existing_study:
+                return jsonify({"error": f"Study name '{new_name}' already exists"}), 409
+            
+            study.name = new_name
+
+        if 'analyst_name' in data:
+            study.analyst_name = data['analyst_name'].strip()
+
+        db.session.commit()
+        
+        logging.info(f"API: Updated study {study_id} - Name: '{study.name}', Analyst: '{study.analyst_name}'")
+        
+        return jsonify({
+            "id": study.id,
+            "name": study.name,
+            "analyst_name": study.analyst_name,
+            "created_at": study.created_at.isoformat() if study.created_at else None,
+            "message": "Study updated successfully"
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.exception(f"API: Error updating study {study_id}")
+        return jsonify({"error": f"Database error during update: {e}"}), 500
 
 @api_bp.route('/studies/<int:study_id>', methods=['DELETE'])
 def delete_study(study_id):

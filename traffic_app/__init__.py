@@ -47,6 +47,14 @@ def create_app(config_name=None):
     db.init_app(app)
     app.logger.info("Database Initialized.")
     
+    # Create database tables if they don't exist
+    with app.app_context():
+        try:
+            db.create_all()
+            app.logger.info("Database tables created successfully")
+        except Exception as e:
+            app.logger.error(f"Error creating database tables: {e}")
+    
     # 5. Initialize Cloudinary
     with app.app_context():
         from .storage import init_cloudinary

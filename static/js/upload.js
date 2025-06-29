@@ -263,28 +263,27 @@ function initUploader() {
             })
             .then(html => {
                 console.log(`File ${currentUploadIndex + 1} uploaded successfully`);
+                
+                // Update the target with the HTML response from the server after each upload
+                const targetSelector = uploadForm.getAttribute('hx-target');
+                if (targetSelector) {
+                    const targetElement = document.querySelector(targetSelector);
+                    if (targetElement) {
+                        targetElement.innerHTML = html; // Manually set the HTML
+                        htmx.process(targetElement);    // Tell HTMX to process this new content
+                    } else {
+                        console.error('HTMX target not found:', targetSelector);
+                    }
+                } else {
+                    console.error('No hx-target found on upload form.');
+                }
+                
                 currentUploadIndex++;
                 if (currentUploadIndex >= files.length) {
-                    // This was the last file, update the target with the HTML response from the server
-                    const targetSelector = uploadForm.getAttribute('hx-target');
-                    if (targetSelector) {
-                        const targetElement = document.querySelector(targetSelector);
-                        if (targetElement) {
-                            targetElement.innerHTML = html; // Manually set the HTML
-                            htmx.process(targetElement);    // Tell HTMX to process this new content
-                        } else {
-                            console.error('HTMX target not found:', targetSelector);
-                            window.location.reload(); // Fallback to reload if target not found
-                        }
-                    } else {
-                        console.error('No hx-target found on upload form.');
-                        window.location.reload(); // Fallback to reload
-                    }
-                    // Final cleanup after the last file's HTML has been processed.
+                    // Final cleanup after all files are processed
                     console.log('All files processed, HTMX target updated and processed.');
                     isUploading = false;
                     files = []; 
-                    // No return here, allowing the main function to exit.
                 } else {
                     setTimeout(uploadNext, 100); // Upload next file after a short delay
                 }

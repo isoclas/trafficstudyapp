@@ -523,30 +523,35 @@ def get_scenario_status(study_id, scenario_id):
                 i += 1
             return f"{size_bytes:.1f} {size_names[i]}"
         
+        # Calculate file sizes once for efficiency
+        am_csv_size = get_file_size(scenario.am_csv_path)
+        pm_csv_size = get_file_size(scenario.pm_csv_path)
+        attout_txt_size = get_file_size(scenario.attout_txt_path)
+        
         uploaded_files_info = [
             {
                 "file_type_id": "am_csv",
                 "file_type_label": "AM CSV",
                 "original_name": scenario.am_csv_original_name,
                 "is_uploaded": bool(scenario.am_csv_path),
-                "file_size_bytes": get_file_size(scenario.am_csv_path),
-                "file_size_formatted": format_file_size(get_file_size(scenario.am_csv_path))
+                "file_size_bytes": am_csv_size,
+                "file_size_formatted": format_file_size(am_csv_size)
             },
             {
                 "file_type_id": "pm_csv",
                 "file_type_label": "PM CSV",
                 "original_name": scenario.pm_csv_original_name,
                 "is_uploaded": bool(scenario.pm_csv_path),
-                "file_size_bytes": get_file_size(scenario.pm_csv_path),
-                "file_size_formatted": format_file_size(get_file_size(scenario.pm_csv_path))
+                "file_size_bytes": pm_csv_size,
+                "file_size_formatted": format_file_size(pm_csv_size)
             },
             {
                 "file_type_id": "attout_txt",
                 "file_type_label": "ATTOUT TXT",
                 "original_name": scenario.attout_txt_original_name,
                 "is_uploaded": bool(scenario.attout_txt_path),
-                "file_size_bytes": get_file_size(scenario.attout_txt_path),
-                "file_size_formatted": format_file_size(get_file_size(scenario.attout_txt_path))
+                "file_size_bytes": attout_txt_size,
+                "file_size_formatted": format_file_size(attout_txt_size)
             }
         ]
 

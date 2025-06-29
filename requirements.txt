@@ -8,8 +8,8 @@ psycopg2-binary==2.9.9
 PyMySQL==1.1.1
 
 # Data Processing
-pandas==2.2.2
-numpy==1.26.4
+pandas==2.2.3
+numpy==1.26.5
 
 # HTTP Requests
 requests==2.31.0

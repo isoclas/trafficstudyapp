@@ -445,6 +445,8 @@ def get_scenario_status(study_id: int, scenario_id: int) -> Tuple[Dict[str, Any]
     if current_app.config.get('USE_INTERNAL_API', False) and Scenario is not None:
         try:
             # Direct database operation instead of HTTP request
+            # Refresh the session to ensure we get the latest data
+            db.session.expire_all()
             scenario = db.session.get(Scenario, scenario_id)
             if not scenario:
                 error = 'Scenario not found.'
@@ -460,23 +462,35 @@ def get_scenario_status(study_id: int, scenario_id: int) -> Tuple[Dict[str, Any]
             def get_file_size(file_path):
                 """Get file size in bytes, return None if file doesn't exist"""
                 if not file_path:
+                    logging.debug(f"get_file_size: No file path provided")
                     return None
                 try:
                     # Check if it's a Cloudinary URL
                     if file_path.startswith('http'):
                         import requests
+                        logging.debug(f"get_file_size: Getting size for Cloudinary URL: {file_path}")
                         response = requests.head(file_path, timeout=10)
                         if response.status_code == 200:
                             content_length = response.headers.get('content-length')
                             if content_length:
-                                return int(content_length)
+                                size = int(content_length)
+                                logging.debug(f"get_file_size: Cloudinary file size: {size} bytes")
+                                return size
+                        logging.debug(f"get_file_size: Cloudinary request failed with status {response.status_code}")
                     else:
                         # Local file path
                         abs_path = get_absolute_path(file_path)
+                        logging.debug(f"get_file_size: Local file path: {file_path} -> {abs_path}")
                         if abs_path and os.path.exists(abs_path):
-                            return os.path.getsize(abs_path)
-                except Exception:
+                            size = os.path.getsize(abs_path)
+                            logging.debug(f"get_file_size: Local file size: {size} bytes")
+                            return size
+                        else:
+                            logging.debug(f"get_file_size: Local file does not exist: {abs_path}")
+                except Exception as e:
+                    logging.debug(f"get_file_size: Exception occurred: {e}")
                     pass
+                logging.debug(f"get_file_size: Returning None for {file_path}")
                 return None
             
             def format_file_size(size_bytes):
@@ -675,6 +689,10 @@ def upload_file(study_id: int, scenario_id: int, file_type: str, file) -> Tuple[
                     scenario.status_message = "Waiting for other input file(s)."
             
             db.session.commit()
+            db.session.flush()  # Ensure changes are immediately visible
+            
+            # Log the file path for debugging
+            logging.info(f"File saved to: {relative_save_path}, checking if exists: {os.path.exists(get_absolute_path(relative_save_path)) if get_absolute_path(relative_save_path) else 'Path resolution failed'}")
             
             data = {
                 "message": f"File '{secure_filename(file.filename)}' uploaded successfully for type '{file_type}'.",

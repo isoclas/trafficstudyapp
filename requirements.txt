@@ -1,15 +1,15 @@
 # Core Flask Framework
-Flask==3.0.0
-Werkzeug==3.0.1
+Flask==3.0.3
+Werkzeug==3.0.3
 
 # Database
 Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.9
-PyMySQL==1.1.0
+PyMySQL==1.1.1
 
 # Data Processing
-pandas==2.1.4
-numpy==1.26.2
+pandas==2.2.2
+numpy==1.26.4
 
 # HTTP Requests
 requests==2.31.0

@@ -493,9 +493,19 @@ def get_scenario_status(study_id, scenario_id):
             if not file_path:
                 return None
             try:
-                abs_path = get_absolute_path(file_path)
-                if abs_path and os.path.exists(abs_path):
-                    return os.path.getsize(abs_path)
+                # Check if it's a Cloudinary URL
+                if file_path.startswith('http'):
+                    import requests
+                    response = requests.head(file_path, timeout=10)
+                    if response.status_code == 200:
+                        content_length = response.headers.get('content-length')
+                        if content_length:
+                            return int(content_length)
+                else:
+                    # Local file path
+                    abs_path = get_absolute_path(file_path)
+                    if abs_path and os.path.exists(abs_path):
+                        return os.path.getsize(abs_path)
             except Exception:
                 pass
             return None
@@ -935,9 +945,19 @@ def delete_scenario_file_typed(study_id, scenario_id, file_type_id):
         if not file_path:
             return None
         try:
-            abs_path = get_absolute_path(file_path)
-            if abs_path and os.path.exists(abs_path):
-                return os.path.getsize(abs_path)
+            # Check if it's a Cloudinary URL
+            if file_path.startswith('http'):
+                import requests
+                response = requests.head(file_path, timeout=10)
+                if response.status_code == 200:
+                    content_length = response.headers.get('content-length')
+                    if content_length:
+                        return int(content_length)
+            else:
+                # Local file path
+                abs_path = get_absolute_path(file_path)
+                if abs_path and os.path.exists(abs_path):
+                    return os.path.getsize(abs_path)
         except Exception:
             pass
         return None

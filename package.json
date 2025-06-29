@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build": "tailwindcss -i static/src/input.css -o static/dist/output.css --minify",
+    "dev": "tailwindcss -i static/src/input.css -o static/dist/output.css --watch"
+  },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.8",
     "flowbite-typography": "^1.0.5",

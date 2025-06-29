@@ -6,8 +6,19 @@ class Config:
     """Base configuration class."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'final-secret-key-change-me-please')
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    # Handle DATABASE_URL with SSL configuration for PostgreSQL
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith('postgresql://'):
+        # Convert postgresql:// to postgresql+psycopg2:// and add SSL settings
+        database_url = database_url.replace('postgresql://', 'postgresql+psycopg2://')
+        if '?' not in database_url:
+            database_url += '?sslmode=require'
+        else:
+            database_url += '&sslmode=require'
+    
+    SQLALCHEMY_DATABASE_URI = database_url or \
         f'sqlite:///{os.path.join(BASE_DIR, "instance", "traffic_app.db")}'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # File storage configuration

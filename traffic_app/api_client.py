@@ -393,7 +393,8 @@ def get_scenarios(study_id: int, configuration_id: Optional[int] = None) -> Tupl
             if configuration_id:
                 query = query.filter(Scenario.configuration_id == configuration_id)
             
-            scenario_objects = query.all()
+            # Order by creation time to maintain original order
+            scenario_objects = query.order_by(Scenario.created_at.asc()).all()
             
             # Convert to dictionaries
             scenarios = []

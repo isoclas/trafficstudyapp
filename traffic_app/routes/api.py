@@ -233,8 +233,8 @@ def get_scenarios(study_id):
         if configuration_id:
             query = query.filter_by(configuration_id=configuration_id)
 
-        # Order by ID in ascending order
-        scenarios = query.order_by(Scenario.id.asc()).all()
+        # Order by creation time to maintain original order
+        scenarios = query.order_by(Scenario.created_at.asc()).all()
         scenario_list = [{
                 "id": s.id,
                 "name": s.name,

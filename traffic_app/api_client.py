@@ -458,83 +458,25 @@ def get_scenario_status(study_id: int, scenario_id: int) -> Tuple[Dict[str, Any]
                 error = 'Scenario not found.'
                 return scenario_data, error
             
-            # Build uploaded files info with file sizes
-            def get_file_size(file_path):
-                """Get file size in bytes, return None if file doesn't exist"""
-                if not file_path:
-                    logging.debug(f"get_file_size: No file path provided")
-                    return None
-                try:
-                    # Check if it's a Cloudinary URL
-                    if file_path.startswith('http'):
-                        import requests
-                        logging.debug(f"get_file_size: Getting size for Cloudinary URL: {file_path}")
-                        response = requests.head(file_path, timeout=10)
-                        if response.status_code == 200:
-                            content_length = response.headers.get('content-length')
-                            if content_length:
-                                size = int(content_length)
-                                logging.debug(f"get_file_size: Cloudinary file size: {size} bytes")
-                                return size
-                        logging.debug(f"get_file_size: Cloudinary request failed with status {response.status_code}")
-                    else:
-                        # Local file path
-                        abs_path = get_absolute_path(file_path)
-                        logging.debug(f"get_file_size: Local file path: {file_path} -> {abs_path}")
-                        if abs_path and os.path.exists(abs_path):
-                            size = os.path.getsize(abs_path)
-                            logging.debug(f"get_file_size: Local file size: {size} bytes")
-                            return size
-                        else:
-                            logging.debug(f"get_file_size: Local file does not exist: {abs_path}")
-                except Exception as e:
-                    logging.debug(f"get_file_size: Exception occurred: {e}")
-                    pass
-                logging.debug(f"get_file_size: Returning None for {file_path}")
-                return None
-            
-            def format_file_size(size_bytes):
-                """Format file size in human readable format"""
-                if size_bytes is None:
-                    return None
-                if size_bytes == 0:
-                    return "0 B"
-                size_names = ["B", "KB", "MB", "GB"]
-                i = 0
-                while size_bytes >= 1024 and i < len(size_names) - 1:
-                    size_bytes /= 1024.0
-                    i += 1
-                return f"{size_bytes:.1f} {size_names[i]}"
-            
-            # Calculate file sizes once for efficiency
-            am_csv_size = get_file_size(scenario.am_csv_path)
-            pm_csv_size = get_file_size(scenario.pm_csv_path)
-            attout_txt_size = get_file_size(scenario.attout_txt_path)
-            
+            # Build uploaded files info
             uploaded_files_info = [
                 {
                     "file_type_id": "am_csv",
                     "file_type_label": "AM CSV",
                     "original_name": scenario.am_csv_original_name,
-                    "is_uploaded": bool(scenario.am_csv_path),
-                    "file_size_bytes": am_csv_size,
-                    "file_size_formatted": format_file_size(am_csv_size)
+                    "is_uploaded": bool(scenario.am_csv_path)
                 },
                 {
                     "file_type_id": "pm_csv",
                     "file_type_label": "PM CSV",
                     "original_name": scenario.pm_csv_original_name,
-                    "is_uploaded": bool(scenario.pm_csv_path),
-                    "file_size_bytes": pm_csv_size,
-                    "file_size_formatted": format_file_size(pm_csv_size)
+                    "is_uploaded": bool(scenario.pm_csv_path)
                 },
                 {
                     "file_type_id": "attout_txt",
                     "file_type_label": "ATTOUT TXT",
                     "original_name": scenario.attout_txt_original_name,
-                    "is_uploaded": bool(scenario.attout_txt_path),
-                    "file_size_bytes": attout_txt_size,
-                    "file_size_formatted": format_file_size(attout_txt_size)
+                    "is_uploaded": bool(scenario.attout_txt_path)
                 }
             ]
             
@@ -1333,66 +1275,25 @@ def delete_scenario_file_api(study_id: int, scenario_id: int, file_type_id: str)
                 logging.error(f"API Client: Database error committing changes after file deletion for scenario {scenario_id}: {e}")
                 return False, error
             
-            # Return the updated scenario status with file sizes
-            def get_file_size(file_path):
-                """Get file size in bytes, return None if file doesn't exist"""
-                if not file_path:
-                    return None
-                try:
-                    # Check if it's a Cloudinary URL
-                    if file_path.startswith('http'):
-                        import requests
-                        response = requests.head(file_path, timeout=10)
-                        if response.status_code == 200:
-                            content_length = response.headers.get('content-length')
-                            if content_length:
-                                return int(content_length)
-                    else:
-                        # Local file path
-                        abs_path = get_absolute_path(file_path)
-                        if abs_path and os.path.exists(abs_path):
-                            return os.path.getsize(abs_path)
-                except Exception:
-                    pass
-                return None
-            
-            def format_file_size(size_bytes):
-                """Format file size in human readable format"""
-                if size_bytes is None:
-                    return None
-                if size_bytes == 0:
-                    return "0 B"
-                size_names = ["B", "KB", "MB", "GB"]
-                i = 0
-                while size_bytes >= 1024 and i < len(size_names) - 1:
-                    size_bytes /= 1024.0
-                    i += 1
-                return f"{size_bytes:.1f} {size_names[i]}"
-            
+            # Return the updated scenario status
             updated_uploaded_files_info = [
                 {
                     "file_type_id": "am_csv", 
                     "file_type_label": "AM CSV", 
                     "original_name": scenario.am_csv_original_name, 
-                    "is_uploaded": bool(scenario.am_csv_path),
-                    "file_size_bytes": get_file_size(scenario.am_csv_path),
-                    "file_size_formatted": format_file_size(get_file_size(scenario.am_csv_path))
+                    "is_uploaded": bool(scenario.am_csv_path)
                 },
                 {
                     "file_type_id": "pm_csv", 
                     "file_type_label": "PM CSV", 
                     "original_name": scenario.pm_csv_original_name, 
-                    "is_uploaded": bool(scenario.pm_csv_path),
-                    "file_size_bytes": get_file_size(scenario.pm_csv_path),
-                    "file_size_formatted": format_file_size(get_file_size(scenario.pm_csv_path))
+                    "is_uploaded": bool(scenario.pm_csv_path)
                 },
                 {
                     "file_type_id": "attout_txt", 
                     "file_type_label": "ATTOUT TXT", 
                     "original_name": scenario.attout_txt_original_name, 
-                    "is_uploaded": bool(scenario.attout_txt_path),
-                    "file_size_bytes": get_file_size(scenario.attout_txt_path),
-                    "file_size_formatted": format_file_size(get_file_size(scenario.attout_txt_path))
+                    "is_uploaded": bool(scenario.attout_txt_path)
                 }
             ]
             

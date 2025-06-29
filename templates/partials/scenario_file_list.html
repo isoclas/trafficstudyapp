@@ -50,13 +50,6 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="text-sm text-gray-500 dark:text-gray-400">
-                                    {% if file_info.file_size_formatted %}
-                                        {{ file_info.file_size_formatted }}
-                                    {% else %}
-                                        --
-                                    {% endif %}
-                                </span>
                                 <button class="cursor-pointer p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 file-delete-btn" type="button"
                                         hx-get="{{ url_for('frontend.show_delete_confirmation', 
                                                     message='Are you sure you want to delete ' + file_info.original_name + ' (' + file_info.file_type_label + ')?',
@@ -67,7 +60,7 @@
                                         hx-target="body"
                                         hx-swap="beforeend"
                                         title="Delete file">
-                                    <svg class="w-4 h-4 text-gray-400 hover:text-red-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <svg class="w-6 h-6 text-gray-400 hover:text-red-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
                                     </svg>
                                 </button>

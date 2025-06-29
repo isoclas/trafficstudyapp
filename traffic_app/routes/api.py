@@ -488,70 +488,24 @@ def get_scenario_status(study_id, scenario_id):
         return jsonify({"error": f"Scenario {scenario_id} not found for study {study_id}."}), 404
     try:
         # Helper functions for file size
-        def get_file_size(file_path):
-            """Get file size in bytes, return None if file doesn't exist"""
-            if not file_path:
-                return None
-            try:
-                # Check if it's a Cloudinary URL
-                if file_path.startswith('http'):
-                    import requests
-                    response = requests.head(file_path, timeout=10)
-                    if response.status_code == 200:
-                        content_length = response.headers.get('content-length')
-                        if content_length:
-                            return int(content_length)
-                else:
-                    # Local file path
-                    abs_path = get_absolute_path(file_path)
-                    if abs_path and os.path.exists(abs_path):
-                        return os.path.getsize(abs_path)
-            except Exception:
-                pass
-            return None
-        
-        def format_file_size(size_bytes):
-            """Format file size in human readable format"""
-            if size_bytes is None:
-                return None
-            if size_bytes == 0:
-                return "0 B"
-            size_names = ["B", "KB", "MB", "GB"]
-            i = 0
-            while size_bytes >= 1024 and i < len(size_names) - 1:
-                size_bytes /= 1024.0
-                i += 1
-            return f"{size_bytes:.1f} {size_names[i]}"
-        
-        # Calculate file sizes once for efficiency
-        am_csv_size = get_file_size(scenario.am_csv_path)
-        pm_csv_size = get_file_size(scenario.pm_csv_path)
-        attout_txt_size = get_file_size(scenario.attout_txt_path)
-        
         uploaded_files_info = [
             {
                 "file_type_id": "am_csv",
                 "file_type_label": "AM CSV",
                 "original_name": scenario.am_csv_original_name,
-                "is_uploaded": bool(scenario.am_csv_path),
-                "file_size_bytes": am_csv_size,
-                "file_size_formatted": format_file_size(am_csv_size)
+                "is_uploaded": bool(scenario.am_csv_path)
             },
             {
                 "file_type_id": "pm_csv",
                 "file_type_label": "PM CSV",
                 "original_name": scenario.pm_csv_original_name,
-                "is_uploaded": bool(scenario.pm_csv_path),
-                "file_size_bytes": pm_csv_size,
-                "file_size_formatted": format_file_size(pm_csv_size)
+                "is_uploaded": bool(scenario.pm_csv_path)
             },
             {
                 "file_type_id": "attout_txt",
                 "file_type_label": "ATTOUT TXT",
                 "original_name": scenario.attout_txt_original_name,
-                "is_uploaded": bool(scenario.attout_txt_path),
-                "file_size_bytes": attout_txt_size,
-                "file_size_formatted": format_file_size(attout_txt_size)
+                "is_uploaded": bool(scenario.attout_txt_path)
             }
         ]
 
@@ -944,66 +898,25 @@ def delete_scenario_file_typed(study_id, scenario_id, file_type_id):
         logging.exception(f"API: Database error committing changes after file deletion for scenario {scenario_id}: {e}")
         return jsonify({"error": f"Database error after file deletion: {str(e)}"}), 500
 
-    # Return the updated scenario status with file sizes, similar to get_scenario_status
-    def get_file_size_delete(file_path):
-        """Get file size in bytes, return None if file doesn't exist"""
-        if not file_path:
-            return None
-        try:
-            # Check if it's a Cloudinary URL
-            if file_path.startswith('http'):
-                import requests
-                response = requests.head(file_path, timeout=10)
-                if response.status_code == 200:
-                    content_length = response.headers.get('content-length')
-                    if content_length:
-                        return int(content_length)
-            else:
-                # Local file path
-                abs_path = get_absolute_path(file_path)
-                if abs_path and os.path.exists(abs_path):
-                    return os.path.getsize(abs_path)
-        except Exception:
-            pass
-        return None
-    
-    def format_file_size_delete(size_bytes):
-        """Format file size in human readable format"""
-        if size_bytes is None:
-            return None
-        if size_bytes == 0:
-            return "0 B"
-        size_names = ["B", "KB", "MB", "GB"]
-        i = 0
-        while size_bytes >= 1024 and i < len(size_names) - 1:
-            size_bytes /= 1024.0
-            i += 1
-        return f"{size_bytes:.1f} {size_names[i]}"
-    
+    # Return the updated scenario status
     updated_uploaded_files_info = [
         {
             "file_type_id": "am_csv", 
             "file_type_label": "AM CSV", 
             "original_name": scenario.am_csv_original_name, 
-            "is_uploaded": bool(scenario.am_csv_path),
-            "file_size_bytes": get_file_size_delete(scenario.am_csv_path),
-            "file_size_formatted": format_file_size_delete(get_file_size_delete(scenario.am_csv_path))
+            "is_uploaded": bool(scenario.am_csv_path)
         },
         {
             "file_type_id": "pm_csv", 
             "file_type_label": "PM CSV", 
             "original_name": scenario.pm_csv_original_name, 
-            "is_uploaded": bool(scenario.pm_csv_path),
-            "file_size_bytes": get_file_size_delete(scenario.pm_csv_path),
-            "file_size_formatted": format_file_size_delete(get_file_size_delete(scenario.pm_csv_path))
+            "is_uploaded": bool(scenario.pm_csv_path)
         },
         {
             "file_type_id": "attout_txt", 
             "file_type_label": "ATTOUT TXT", 
             "original_name": scenario.attout_txt_original_name, 
-            "is_uploaded": bool(scenario.attout_txt_path),
-            "file_size_bytes": get_file_size_delete(scenario.attout_txt_path),
-            "file_size_formatted": format_file_size_delete(get_file_size_delete(scenario.attout_txt_path))
+            "is_uploaded": bool(scenario.attout_txt_path)
         }
     ]
     return jsonify({

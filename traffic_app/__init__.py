@@ -47,6 +47,9 @@ def create_app(config_name=None):
     db.init_app(app)
     app.logger.info("Database Initialized.")
     
+    # Import models so SQLAlchemy knows about them
+    from . import models
+    
     # Create database tables if they don't exist
     with app.app_context():
         try:

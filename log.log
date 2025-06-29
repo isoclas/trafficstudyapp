@@ -1,223 +1,29 @@
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.errors.UndefinedTable: relation "study" does not exist
-LINE 2: FROM study ORDER BY study.created_at DESC
-             ^
-The above exception was the direct cause of the following exception:
-Traceback (most recent call last):
-  File "/opt/render/project/src/traffic_app/routes/api.py", line 65, in studies
-    study_objects = Study.query.order_by(Study.created_at.desc()).all()
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 2704, in all
-    return self._iter().all()  # type: ignore
-           ~~~~~~~~~~^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-        params,
-        ^^^^^^^
-        execution_options={"_sa_orm_load_options": self.load_options},
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
-    return self._execute_internal(
-           ~~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
-    result: Result[Any] = compile_state_cls.orm_execute_statement(
-                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self,
-        ^^^^^
-    ...<4 lines>...
-        conn,
-        ^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
-    result = conn.execute(
-        statement, params or {}, execution_options=execution_options
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
-    return meth(
-        self,
-        distilled_parameters,
-        execution_options or NO_OPTIONS,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
-    return connection._execute_clauseelement(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self, distilled_params, execution_options
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
-    ret = self._execute_context(
-        dialect,
-    ...<8 lines>...
-        cache_hit=cache_hit,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
-    return self._exec_single_context(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^
-        dialect, context, statement, parameters
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
-    self._handle_dbapi_exception(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        e, str_statement, effective_parameters, cursor, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation "study" does not exist
-LINE 2: FROM study ORDER BY study.created_at DESC
-             ^
-[SQL: SELECT study.id AS study_id, study.name AS study_name, study.analyst_name AS study_analyst_name, study.created_at AS study_created_at 
-FROM study ORDER BY study.created_at DESC]
-(Background on this error at: https://sqlalche.me/e/20/f405)
-127.0.0.1 - - [29/Jun/2025:08:30:50 +0000] "GET /api/studies HTTP/1.1" 500 412 "-" "python-requests/2.32.4"
-2025-06-29 08:30:51,014 - ERROR - root - API: Error fetching studies
-Traceback (most recent call last):
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.errors.UndefinedTable: relation "study" does not exist
-LINE 2: FROM study ORDER BY study.created_at DESC
-             ^
-The above exception was the direct cause of the following exception:
-Traceback (most recent call last):
-  File "/opt/render/project/src/traffic_app/routes/api.py", line 65, in studies
-    study_objects = Study.query.order_by(Study.created_at.desc()).all()
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 2704, in all
-    return self._iter().all()  # type: ignore
-           ~~~~~~~~~~^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-        params,
-        ^^^^^^^
-        execution_options={"_sa_orm_load_options": self.load_options},
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
-    return self._execute_internal(
-           ~~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
-    result: Result[Any] = compile_state_cls.orm_execute_statement(
-                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self,
-        ^^^^^
-    ...<4 lines>...
-        conn,
-        ^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
-    result = conn.execute(
-        statement, params or {}, execution_options=execution_options
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
-    return meth(
-        self,
-        distilled_parameters,
-        execution_options or NO_OPTIONS,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
-    return connection._execute_clauseelement(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self, distilled_params, execution_options
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
-    ret = self._execute_context(
-        dialect,
-    ...<8 lines>...
-        cache_hit=cache_hit,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
-    return self._exec_single_context(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^
-        dialect, context, statement, parameters
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
-    self._handle_dbapi_exception(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        e, str_statement, effective_parameters, cursor, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation "study" does not exist
-LINE 2: FROM study ORDER BY study.created_at DESC
-             ^
-[SQL: SELECT study.id AS study_id, study.name AS study_name, study.analyst_name AS study_analyst_name, study.created_at AS study_created_at 
-FROM study ORDER BY study.created_at DESC]
-(Background on this error at: https://sqlalche.me/e/20/f405)
-127.0.0.1 - - [29/Jun/2025:08:30:51 +0000] "GET /api/studies HTTP/1.1" 500 412 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
-2025-06-29 08:30:51,049 - ERROR - root - Error 404: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-127.0.0.1 - - [29/Jun/2025:08:30:51 +0000] "GET /favicon.ico HTTP/1.1" 404 5579 "https://trafficstudiesapp.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0"
-[2025-06-29 08:31:21 +0000] [103] [CRITICAL] WORKER TIMEOUT (pid:116)
-[2025-06-29 08:31:21 +0000] [116] [ERROR] Error handling request /
+==> Uploading build...
+==> Uploaded in 5.0s. Compression took 1.8s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'gunicorn app:app'
+2025-06-29 08:36:54,305 - INFO - traffic_app - Flask App Initializing...
+2025-06-29 08:36:59,103 - INFO - traffic_app - Database Initialized.
+2025-06-29 08:36:59,656 - INFO - traffic_app - Database tables created successfully
+2025-06-29 08:37:00,501 - INFO - root - Cloudinary initialized
+2025-06-29 08:37:08,096 - INFO - traffic_app - Flask App Initialization Complete.
+[2025-06-29 08:37:08 +0000] [104] [INFO] Starting gunicorn 23.0.0
+[2025-06-29 08:37:08 +0000] [104] [INFO] Listening at: http://0.0.0.0:10000 (104)
+[2025-06-29 08:37:08 +0000] [104] [INFO] Using worker: sync
+[2025-06-29 08:37:08 +0000] [113] [INFO] Booting worker with pid: 113
+2025-06-29 08:37:09,183 - ERROR - root - API Client: Failed to fetch studies from API (http://trafficstudiesapp.onrender.com/api/studies): 500 Server Error: Internal Server Error for url: https://trafficstudiesapp.onrender.com/api/studies
+2025-06-29 08:37:09,184 - ERROR - root - Error fetching studies from API: 500 Server Error: Internal Server Error for url: https://trafficstudiesapp.onrender.com/api/studies
+127.0.0.1 - - [29/Jun/2025:08:37:09 +0000] "HEAD / HTTP/1.1" 200 0 "-" "Go-http-client/1.1"
+==> Your service is live 🎉
+==> 
+==> ///////////////////////////////////////////////////////////
+==> 
+==> Available at your primary URL https://trafficstudiesapp.onrender.com
+==> 
+==> ///////////////////////////////////////////////////////////
+[2025-06-29 08:37:46 +0000] [104] [CRITICAL] WORKER TIMEOUT (pid:113)
+[2025-06-29 08:37:46 +0000] [113] [ERROR] Error handling request /
 Traceback (most recent call last):
   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/sync.py", line 134, in handle
     self.handle_request(listener, req, client, addr)
@@ -275,22 +81,22 @@ Traceback (most recent call last):
                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
   File "/usr/local/lib/python3.13/socket.py", line 719, in readinto
     return self._sock.recv_into(b)
-127.0.0.1 - - [29/Jun/2025:08:31:21 +0000] "GET / HTTP/1.1" 500 0 "-" "-"
            ~~~~~~~~~~~~~~~~~~~~^^^
   File "/usr/local/lib/python3.13/ssl.py", line 1304, in recv_into
     return self.read(nbytes, buffer)
            ~~~~~~~~~^^^^^^^^^^^^^^^^
   File "/usr/local/lib/python3.13/ssl.py", line 1138, in read
+127.0.0.1 - - [29/Jun/2025:08:37:46 +0000] "GET / HTTP/1.1" 500 0 "-" "-"
     return self._sslobj.read(len, buffer)
            ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
     sys.exit(1)
     ~~~~~~~~^^^
 SystemExit: 1
-[2025-06-29 08:31:21 +0000] [116] [INFO] Worker exiting (pid: 116)
-[2025-06-29 08:31:23 +0000] [103] [ERROR] Worker (pid:116) was sent SIGKILL! Perhaps out of memory?
-[2025-06-29 08:31:23 +0000] [117] [INFO] Booting worker with pid: 117
-2025-06-29 08:31:23,771 - ERROR - root - API: Error fetching studies
+[2025-06-29 08:37:46 +0000] [113] [INFO] Worker exiting (pid: 113)
+[2025-06-29 08:37:47 +0000] [104] [ERROR] Worker (pid:113) was sent SIGKILL! Perhaps out of memory?
+[2025-06-29 08:37:47 +0000] [116] [INFO] Booting worker with pid: 116
+2025-06-29 08:37:47,558 - ERROR - root - API: Error fetching studies
 Traceback (most recent call last):
   File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
     self.dialect.do_execute(
@@ -398,187 +204,4 @@ LINE 2: FROM study ORDER BY study.created_at DESC
 [SQL: SELECT study.id AS study_id, study.name AS study_name, study.analyst_name AS study_analyst_name, study.created_at AS study_created_at 
 FROM study ORDER BY study.created_at DESC]
 (Background on this error at: https://sqlalche.me/e/20/f405)
-127.0.0.1 - - [29/Jun/2025:08:31:23 +0000] "GET /api/studies HTTP/1.1" 500 412 "-" "python-requests/2.32.4"
-[2025-06-29 08:31:54 +0000] [103] [CRITICAL] WORKER TIMEOUT (pid:117)
-[2025-06-29 08:31:54 +0000] [117] [ERROR] Error handling request /
-Traceback (most recent call last):
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/sync.py", line 134, in handle
-    self.handle_request(listener, req, client, addr)
-    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
-    respiter = self.wsgi(environ, resp.start_response)
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 1536, in __call__
-    return self.wsgi_app(environ, start_response)
-           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "/opt/render/project/src/traffic_app/routes/frontend.py", line 161, in index
-    studies, error = api_client.get_studies()
-                     ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/opt/render/project/src/traffic_app/api_client.py", line 87, in get_studies
-    response = requests.get(api_url)
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/requests/api.py", line 73, in get
-    return request("get", url, params=params, **kwargs)
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/requests/api.py", line 59, in request
-    return session.request(method=method, url=url, **kwargs)
-           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/requests/sessions.py", line 589, in request
-    resp = self.send(prep, **send_kwargs)
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/requests/sessions.py", line 703, in send
-    r = adapter.send(request, **kwargs)
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/requests/adapters.py", line 667, in send
-    resp = conn.urlopen(
-        method=request.method,
-    ...<9 lines>...
-        chunked=chunked,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 787, in urlopen
-    response = self._make_request(
-        conn,
-    ...<10 lines>...
-        **response_kw,
-    )
-127.0.0.1 - - [29/Jun/2025:08:31:54 +0000] "GET / HTTP/1.1" 500 0 "-" "-"
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/urllib3/connectionpool.py", line 534, in _make_request
-    response = conn.getresponse()
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/urllib3/connection.py", line 565, in getresponse
-    httplib_response = super().getresponse()
-  File "/usr/local/lib/python3.13/http/client.py", line 1430, in getresponse
-    response.begin()
-    ~~~~~~~~~~~~~~^^
-  File "/usr/local/lib/python3.13/http/client.py", line 331, in begin
-    version, status, reason = self._read_status()
-                              ~~~~~~~~~~~~~~~~~^^
-  File "/usr/local/lib/python3.13/http/client.py", line 292, in _read_status
-    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
-               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.13/socket.py", line 719, in readinto
-    return self._sock.recv_into(b)
-           ~~~~~~~~~~~~~~~~~~~~^^^
-  File "/usr/local/lib/python3.13/ssl.py", line 1304, in recv_into
-    return self.read(nbytes, buffer)
-           ~~~~~~~~~^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.13/ssl.py", line 1138, in read
-    return self._sslobj.read(len, buffer)
-           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
-    sys.exit(1)
-    ~~~~~~~~^^^
-SystemExit: 1
-[2025-06-29 08:31:54 +0000] [117] [INFO] Worker exiting (pid: 117)
-[2025-06-29 08:31:55 +0000] [103] [ERROR] Worker (pid:117) was sent SIGKILL! Perhaps out of memory?
-[2025-06-29 08:31:55 +0000] [118] [INFO] Booting worker with pid: 118
-2025-06-29 08:31:56,135 - ERROR - root - API: Error fetching studies
-Traceback (most recent call last):
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-psycopg2.errors.UndefinedTable: relation "study" does not exist
-LINE 2: FROM study ORDER BY study.created_at DESC
-             ^
-The above exception was the direct cause of the following exception:
-Traceback (most recent call last):
-  File "/opt/render/project/src/traffic_app/routes/api.py", line 65, in studies
-    study_objects = Study.query.order_by(Study.created_at.desc()).all()
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 2704, in all
-    return self._iter().all()  # type: ignore
-           ~~~~~~~~~~^^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-        params,
-        ^^^^^^^
-        execution_options={"_sa_orm_load_options": self.load_options},
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
-    return self._execute_internal(
-           ~~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
-    result: Result[Any] = compile_state_cls.orm_execute_statement(
-                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self,
-        ^^^^^
-    ...<4 lines>...
-        conn,
-        ^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
-    result = conn.execute(
-        statement, params or {}, execution_options=execution_options
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
-    return meth(
-        self,
-        distilled_parameters,
-        execution_options or NO_OPTIONS,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
-    return connection._execute_clauseelement(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self, distilled_params, execution_options
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
-    ret = self._execute_context(
-        dialect,
-    ...<8 lines>...
-        cache_hit=cache_hit,
-    )
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
-    return self._exec_single_context(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^
-        dialect, context, statement, parameters
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
-    self._handle_dbapi_exception(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        e, str_statement, effective_parameters, cursor, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation "study" does not exist
-LINE 2: FROM study ORDER BY study.created_at DESC
-             ^
-[SQL: SELECT study.id AS study_id, study.name AS study_name, study.analyst_name AS study_analyst_name, study.created_at AS study_created_at 
-FROM study ORDER BY study.created_at DESC]
-(Background on this error at: https://sqlalche.me/e/20/f405)
-127.0.0.1 - - [29/Jun/2025:08:31:56 +0000] "GET /api/studies HTTP/1.1" 500 412 "-" "python-requests/2.32.4"
+127.0.0.1 - - [29/Jun/2025:08:37:47 +0000] "GET /api/studies HTTP/1.1" 500 412 "-" "python-requests/2.32.4"

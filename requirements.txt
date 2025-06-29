@@ -9,7 +9,7 @@ PyMySQL==1.1.1
 
 # Data Processing
 pandas==2.2.3
-numpy==1.26.5
+numpy>=2.0.0,<3.0.0
 
 # HTTP Requests
 requests==2.31.0

@@ -43,7 +43,6 @@ class Config:
         os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
         return f'sqlite:///{sqlite_path}'
     
-    SQLALCHEMY_DATABASE_URI = get_database_uri.__func__()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,  # Verify connections before use

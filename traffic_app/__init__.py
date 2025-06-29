@@ -29,6 +29,9 @@ def create_app(config_name=None):
     app.config.from_object(config_class)
     app.config.from_pyfile('config.py', silent=True)
     
+    # Set the database URI using the classmethod
+    app.config['SQLALCHEMY_DATABASE_URI'] = config_class.get_database_uri()
+    
     # Initialize configuration-specific settings
     if hasattr(config_class, 'init_app'):
         config_class.init_app(app)

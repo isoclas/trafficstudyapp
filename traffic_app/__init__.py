@@ -10,7 +10,13 @@ from flask import Flask
 
 def create_app(config_name=None):
     """Creates and configures the Flask application."""
-    app = Flask(__name__, instance_relative_config=True, template_folder='../templates', static_folder='../static', static_url_path='/static')
+    app = Flask(
+        __name__, 
+        instance_relative_config=True, 
+        template_folder='../templates', 
+        static_folder='../static', 
+        static_url_path='/static'
+    )
 
     # 1. Load Configuration
     from .config import config
@@ -22,6 +28,10 @@ def create_app(config_name=None):
     config_class = config.get(config_name, config['default'])
     app.config.from_object(config_class)
     app.config.from_pyfile('config.py', silent=True)
+    
+    # Initialize configuration-specific settings
+    if hasattr(config_class, 'init_app'):
+        config_class.init_app(app)
 
     # Ensure BASE_DIR is correctly set in config if not already derived properly
     if 'BASE_DIR' not in app.config:
@@ -50,13 +60,18 @@ def create_app(config_name=None):
     # Import models so SQLAlchemy knows about them
     from . import models
     
-    # Create database tables if they don't exist
-    with app.app_context():
-        try:
-            db.create_all()
-            app.logger.info("Database tables created successfully")
-        except Exception as e:
-            app.logger.error(f"Error creating database tables: {e}")
+    # Create database tables if they don't exist (only in development/testing)
+    if app.config.get('DEBUG') or app.config.get('TESTING'):
+        with app.app_context():
+            try:
+                db.create_all()
+                app.logger.info("Database tables created successfully")
+            except Exception as e:
+                app.logger.error(f"Error creating database tables: {e}")
+                if app.config.get('TESTING'):
+                    raise  # Re-raise in testing to fail fast
+    else:
+        app.logger.info("Skipping automatic table creation in production")
     
     # 5. Initialize Cloudinary
     with app.app_context():

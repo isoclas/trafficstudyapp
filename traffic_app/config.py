@@ -53,6 +53,9 @@ class ProductionConfig(Config):
     # Ensure Cloudinary is used in production
     USE_CLOUDINARY = os.environ.get('USE_CLOUDINARY', 'True').lower() == 'true'
     
+    # Use internal API calls to avoid SSL issues in production
+    USE_INTERNAL_API = True
+    
     # Production logging format
     LOGGING_FORMAT = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 

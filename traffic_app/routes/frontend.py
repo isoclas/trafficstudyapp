@@ -937,8 +937,13 @@ def reorder_scenarios(study_id, config_id):
             logging.error(f"Error fetching updated scenarios: {error}")
             return f"Error fetching updated scenarios: {error}", 500
             
-        # Return the updated scenario table HTML
-        return render_template('partials/config_scenarios_list.html', scenarios=scenarios, study_id=study_id)
+        # Return just the scenario table HTML to replace the table-container
+        from flask import render_template_string
+        table_html = render_template_string(
+            '{% from "macros/components.html" import scenario_table %}{{ scenario_table(scenarios, study_id) }}',
+            scenarios=scenarios, study_id=study_id
+        )
+        return table_html
         
     except Exception as e:
         logging.error(f"Error reordering scenarios: {e}")

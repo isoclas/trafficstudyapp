@@ -44,6 +44,69 @@ def run_command(command, description):
 
 
 
+def fix_missing_columns():
+    """Automatically fix missing columns in the database."""
+    logger.info("Checking for missing database columns...")
+    try:
+        from traffic_app import create_app
+        from traffic_app.extensions import db
+        from sqlalchemy import text, inspect
+        from traffic_app.models import Configuration
+        
+        app = create_app()
+        
+        with app.app_context():
+            inspector = inspect(db.engine)
+            
+            # Fix known issue with trip_assign_count column
+            if 'configuration' in inspector.get_table_names():
+                existing_columns = [col['name'] for col in inspector.get_columns('configuration')]
+                
+                if 'trip_assign_count' not in existing_columns:
+                    logger.info("Adding missing trip_assign_count column...")
+                    
+                    # Add the missing column
+                    add_column_sql = """
+                    ALTER TABLE configuration 
+                    ADD COLUMN trip_assign_count INTEGER DEFAULT 1 NOT NULL;
+                    """
+                    
+                    db.session.execute(text(add_column_sql))
+                    db.session.commit()
+                    
+                    logger.info("Successfully added trip_assign_count column.")
+                else:
+                    logger.info("Column trip_assign_count already exists.")
+            
+            # Check for any other missing columns in Configuration table
+            # This is a more general approach that could be expanded to other models
+            logger.info("Checking for other missing columns in Configuration table...")
+            
+            # Get all model columns
+            model_columns = Configuration.__table__.columns.keys()
+            
+            # Get existing database columns
+            if 'configuration' in inspector.get_table_names():
+                existing_columns = [col['name'] for col in inspector.get_columns('configuration')]
+                
+                # Find missing columns
+                missing_columns = set(model_columns) - set(existing_columns)
+                
+                if missing_columns:
+                    logger.info(f"Found additional missing columns: {missing_columns}")
+                    # Here you could add code to automatically add these columns
+                    # For now, we'll just log them so they can be handled by Flask-Migrate
+                else:
+                    logger.info("No additional missing columns found.")
+            
+            return True
+            
+    except Exception as e:
+        logger.warning(f"Column fix failed: {e}")
+        import traceback
+        logger.warning(f"Traceback: {traceback.format_exc()}")
+        return False
+
 def setup_flask_migrate():
     """Set up and run Flask-Migrate operations."""
     os.environ['FLASK_APP'] = 'app.py'
@@ -53,22 +116,29 @@ def setup_flask_migrate():
     from traffic_app.extensions import db
 
     app = create_app()
-    with app.app_context():
-        logger.info("Creating all database tables...")
-        db.create_all()
-        logger.info("Database tables created.")
-
+    
+    # First, try to fix any missing columns
+    fix_missing_columns()
+    
     if not os.path.exists('migrations'):
         logger.info("Migrations directory not found. Initializing...")
+        with app.app_context():
+            # First create all tables for initial setup
+            logger.info("Creating all database tables for initial setup...")
+            db.create_all()
+            logger.info("Database tables created.")
+        
         run_command('flask db init', 'Initialize Flask-Migrate')
-        run_command('flask db migrate -m "Initial migration."', 'Create initial migration')
+        run_command('flask db stamp head', 'Stamp database as current')
+    else:
+        logger.info("Migrations directory found. Running migrations...")
+        run_command('flask db migrate -m "Auto-detecting schema changes"', 'Auto-detect migrations')
+        run_command('flask db upgrade', 'Apply database migrations')
     
-    logger.info("Stamping the database with the latest migration.")
-    run_command('flask db stamp head', 'Stamp database')
-
-    logger.info("Running database migrations...")
-    run_command('flask db migrate -m "Auto-detecting changes"', 'Auto-detect migrations')
-    run_command('flask db upgrade', 'Apply database migrations')
+    # Always try to detect and apply any new changes
+    logger.info("Checking for additional schema changes...")
+    run_command('flask db migrate -m "Add missing columns"', 'Detect missing columns')
+    run_command('flask db upgrade', 'Apply any pending migrations')
 
 def main():
     """Main migration function."""

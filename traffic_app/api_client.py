@@ -286,6 +286,16 @@ def configure_study(study_id: int, config_data: Dict[str, Any]) -> Tuple[Dict[st
                         trip_dist_count = 1
                 except (ValueError, TypeError):
                     trip_dist_count = 1
+
+            # Get trip assignment count if trip assignment is included
+            trip_assign_count = 1
+            if incl['include_trip_assign'] and 'trip_assign_count' in config_data:
+                try:
+                    trip_assign_count = int(config_data['trip_assign_count'])
+                    if trip_assign_count < 1:
+                        trip_assign_count = 1
+                except (ValueError, TypeError):
+                    trip_assign_count = 1
             
             # Create a new configuration
             new_config = Configuration(
@@ -296,7 +306,8 @@ def configure_study(study_id: int, config_data: Dict[str, Any]) -> Tuple[Dict[st
                 include_bg_assign=incl['include_bg_assign'],
                 include_trip_dist=incl['include_trip_dist'],
                 trip_dist_count=trip_dist_count,
-                include_trip_assign=incl['include_trip_assign']
+                include_trip_assign=incl['include_trip_assign'],
+                trip_assign_count=trip_assign_count
             )
             
             db.session.add(new_config)
@@ -319,7 +330,14 @@ def configure_study(study_id: int, config_data: Dict[str, Any]) -> Tuple[Dict[st
                         else:
                             scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Distribution_{j}_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
                 
-                if incl['include_trip_assign']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+                # Create multiple trip assignment scenarios if needed
+                if incl['include_trip_assign']:
+                    for j in range(1, trip_assign_count + 1):
+                        # If there's only one trip assignment, don't add a number suffix
+                        if trip_assign_count == 1:
+                            scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+                        else:
+                            scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Assignment_{j}_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
             
             db.session.add_all(scenarios_to_add)
             db.session.commit()
@@ -336,7 +354,8 @@ def configure_study(study_id: int, config_data: Dict[str, Any]) -> Tuple[Dict[st
                     "include_bg_assign": new_config.include_bg_assign,
                     "include_trip_dist": new_config.include_trip_dist,
                     "trip_dist_count": new_config.trip_dist_count,
-                    "include_trip_assign": new_config.include_trip_assign
+                    "include_trip_assign": new_config.include_trip_assign,
+                    "trip_assign_count": new_config.trip_assign_count
                 },
                 "scenarios": s_list
             }

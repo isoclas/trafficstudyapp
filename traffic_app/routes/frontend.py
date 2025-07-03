@@ -1,4 +1,3 @@
-# --- START OF traffic_app/routes/frontend.py ---
 import logging
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, make_response, session
@@ -287,6 +286,14 @@ def configure_study_frontend(study_id):
     except ValueError:
         trip_dist_count = 1
 
+    # Get trip assignment count if trip assignment is included
+    try:
+        trip_assign_count = request.form.get('trip_assign_count', type=int) if include_trip_assign else 1
+        if trip_assign_count < 1:
+            trip_assign_count = 1
+    except ValueError:
+        trip_assign_count = 1
+
     if phases_n is None or phases_n < 0:
         logging.error('Number of phases must be a valid non-negative number.')
         if request.headers.get('HX-Request'):
@@ -300,7 +307,8 @@ def configure_study_frontend(study_id):
             'include_bg_assign': include_bg_assign,
             'include_trip_dist': include_trip_dist,
             'trip_dist_count': trip_dist_count,
-            'include_trip_assign': include_trip_assign
+            'include_trip_assign': include_trip_assign,
+            'trip_assign_count': trip_assign_count
         }
 
         data, error, status_code = api_client.configure_study(study_id, config_data)
@@ -895,5 +903,3 @@ def show_delete_confirmation():
                          method=method,
                          target=target,
                          swap=swap)
-
-# --- END OF traffic_app/routes/frontend.py ---

@@ -1,6 +1,5 @@
 // This prevents variable redeclaration when HTMX reloads the page
 (function() {
-    // Add event listener for accordion animation
     document.addEventListener('htmx:afterSwap', function(event) {
         // Only reset accordion state if the swap target is not modal-container or scenarios-container
         const target = event.target;
@@ -16,20 +15,16 @@
         setTimeout(function() {
             // Ensure all accordions are closed by default
             document.querySelectorAll('.hs-accordion').forEach(function(accordion) {
-                // Make sure accordion is closed
                 accordion.classList.remove('hs-accordion-active');
-                
-                // Update the content height to 0
+
                 const content = accordion.querySelector('.hs-accordion-content');
                 if (content) {
                     content.style.height = '0px';
                 }
-                
-                // Update the toggle button
+
                 const toggle = accordion.querySelector('.hs-accordion-toggle');
                 if (toggle) {
                     toggle.setAttribute('aria-expanded', 'false');
-                    // Ensure down arrow is shown, up arrow is hidden
                     const downIcon = toggle.querySelector('.accordion-icon-down');
                     const upIcon = toggle.querySelector('.accordion-icon-up');
                     if (downIcon && upIcon) {
@@ -43,12 +38,10 @@
         }, 100);
     });
     
-    // Handle date filter dropdown functionality
     document.addEventListener('htmx:afterSwap', function(event) {
         initializeDateFilters();
     });
     
-    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         initializeDateFilters();
     });
@@ -58,14 +51,11 @@
         document.querySelectorAll('input[name="date-filter"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
                 if (this.checked) {
-                    // Update the dropdown button text
                     const selectedText = this.nextElementSibling.textContent;
                     const buttonText = document.getElementById('selected-filter-text');
                     if (buttonText) {
                         buttonText.textContent = selectedText;
                     }
-                    
-                    // Close the dropdown
                     const dropdown = document.getElementById('dropdownRadio');
                     if (dropdown) {
                         dropdown.classList.add('hidden');

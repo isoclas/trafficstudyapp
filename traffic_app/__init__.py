@@ -1,12 +1,66 @@
-# --- START OF traffic_app/__init__.py ---
 import os
 import logging
 from datetime import datetime
 from flask import Flask
 
-# Import extensions and models AFTER defining create_app to avoid circular imports
-# if extensions/models need the app context during import time (less common now).
-# It's generally safer to import them inside create_app or after db.init_app()
+def _ensure_database_schema(app, db):
+    """Ensure database schema matches the models, fixing any missing columns."""
+    try:
+        from sqlalchemy import text, inspect
+        
+        inspector = inspect(db.engine)
+        
+        # Check configuration table for missing trip_assign_count column
+        if 'configuration' in inspector.get_table_names():
+            existing_columns = [col['name'] for col in inspector.get_columns('configuration')]
+            
+            if 'trip_assign_count' not in existing_columns:
+                app.logger.info("Adding missing trip_assign_count column to configuration table...")
+                
+                try:
+                    add_column_sql = """
+                    ALTER TABLE configuration 
+                    ADD COLUMN trip_assign_count INTEGER DEFAULT 1 NOT NULL;
+                    """
+                    
+                    db.session.execute(text(add_column_sql))
+                    db.session.commit()
+                    
+                    app.logger.info("Successfully added trip_assign_count column during app startup.")
+                    
+                except Exception as col_error:
+                    app.logger.warning(f"Failed to add trip_assign_count column: {col_error}")
+                    db.session.rollback()
+                    
+                    # Try alternative check
+                    try:
+                        check_sql = """
+                        SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'configuration' 
+                        AND column_name = 'trip_assign_count';
+                        """
+                        result = db.session.execute(text(check_sql)).fetchone()
+                        
+                        if not result:
+                            db.session.execute(text(add_column_sql))
+                            db.session.commit()
+                            app.logger.info("Successfully added column using alternative method.")
+                        else:
+                            app.logger.info("Column already exists (detected via information_schema).")
+                            
+                    except Exception as alt_error:
+                        app.logger.error(f"All attempts to add trip_assign_count column failed: {alt_error}")
+                        db.session.rollback()
+            else:
+                app.logger.info("trip_assign_count column already exists in configuration table.")
+        else:
+            app.logger.warning("Configuration table not found during schema check.")
+            
+    except Exception as e:
+        app.logger.error(f"Database schema check failed: {e}")
+        import traceback
+        app.logger.error(f"Traceback: {traceback.format_exc()}")
 
 def create_app(config_name=None):
     """Creates and configures the Flask application."""
@@ -30,7 +84,14 @@ def create_app(config_name=None):
     app.config.from_pyfile('config.py', silent=True)
     
     # Set the database URI using the classmethod
-    app.config['SQLALCHEMY_DATABASE_URI'] = config_class.get_database_uri()
+    db_uri = config_class.get_database_uri()
+    if 'sslmode' in db_uri:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'connect_args': {'sslmode': 'require'}
+        }
+        # Remove sslmode from the URI as it's now in connect_args
+        db_uri = db_uri.split('?')[0]
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     
     # Initialize configuration-specific settings
     if hasattr(config_class, 'init_app'):
@@ -60,21 +121,28 @@ def create_app(config_name=None):
     db.init_app(app)
     app.logger.info("Database Initialized.")
     
+    # Initialize Flask-Migrate
+    from flask_migrate import Migrate
+    migrate = Migrate(app, db)
+    app.logger.info("Flask-Migrate Initialized.")
+    
     # Import models so SQLAlchemy knows about them
     from . import models
     
-    # Create database tables if they don't exist (only in development/testing)
-    if app.config.get('DEBUG') or app.config.get('TESTING'):
-        with app.app_context():
-            try:
-                db.create_all()
-                app.logger.info("Database tables created successfully")
-            except Exception as e:
-                app.logger.error(f"Error creating database tables: {e}")
-                if app.config.get('TESTING'):
-                    raise  # Re-raise in testing to fail fast
-    else:
-        app.logger.info("Skipping automatic table creation in production")
+    # Ensure database schema is up to date
+    with app.app_context():
+        try:
+            # Always create tables first (safe operation)
+            db.create_all()
+            app.logger.info("Database tables ensured")
+            
+            # Check and fix missing columns
+            _ensure_database_schema(app, db)
+            
+        except Exception as e:
+            app.logger.error(f"Error ensuring database schema: {e}")
+            if app.config.get('TESTING'):
+                raise  # Re-raise in testing to fail fast
     
     # 5. Initialize Cloudinary
     with app.app_context():
@@ -94,5 +162,3 @@ def create_app(config_name=None):
     
     app.logger.info("Flask App Initialization Complete.")
     return app
-
-# --- END OF traffic_app/__init__.py ---

@@ -1,8 +1,7 @@
-# --- START OF traffic_app/processing.py ---
 import os
 import logging
 import pandas as pd
-from werkzeug.utils import secure_filename # Keep secure_filename import if used here
+from werkzeug.utils import secure_filename
 
 # Define constants specific to processing
 MOVEMENT_COLS = ['EBU','EBL','EBT','EBR','WBU','WBL','WBT','WBR','NBU','NBL','NBT','NBR','SBU','SBL','SBT','SBR']
@@ -183,5 +182,3 @@ def process_traffic_data(am_csv_path, pm_csv_path, attout_txt_path, output_dir, 
     except ValueError as e: logging.error(f"Data validation/format error: {e}"); raise Exception(f"Data Error: {e}") from e
     except KeyError as e: logging.error(f"Missing key error: {e}"); raise Exception(f"Missing data column: {e}") from e
     except Exception as e: logging.exception(f"Unexpected error processing scenario {scenario_name}"); raise Exception(f"Unexpected error: {e}") from e
-
-# --- END OF traffic_app/processing.py ---

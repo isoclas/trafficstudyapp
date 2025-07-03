@@ -931,8 +931,14 @@ def reorder_scenarios(study_id, config_id):
         db.session.commit()
         logging.info("Scenario reordering completed successfully")
         
-        # Return success response for HTMX
-        return '', 200
+        # Fetch updated scenarios and return the updated list for HTMX
+        scenarios, error = api_client.get_scenarios(study_id, config_id)
+        if error:
+            logging.error(f"Error fetching updated scenarios: {error}")
+            return f"Error fetching updated scenarios: {error}", 500
+            
+        # Return the updated scenario table HTML
+        return render_template('partials/config_scenarios_list.html', scenarios=scenarios, study_id=study_id)
         
     except Exception as e:
         logging.error(f"Error reordering scenarios: {e}")

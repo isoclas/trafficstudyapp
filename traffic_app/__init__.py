@@ -1,12 +1,7 @@
-# --- START OF traffic_app/__init__.py ---
 import os
 import logging
 from datetime import datetime
 from flask import Flask
-
-# Import extensions and models AFTER defining create_app to avoid circular imports
-# if extensions/models need the app context during import time (less common now).
-# It's generally safer to import them inside create_app or after db.init_app()
 
 def _ensure_database_schema(app, db):
     """Ensure database schema matches the models, fixing any missing columns."""
@@ -167,5 +162,3 @@ def create_app(config_name=None):
     
     app.logger.info("Flask App Initialization Complete.")
     return app
-
-# --- END OF traffic_app/__init__.py ---

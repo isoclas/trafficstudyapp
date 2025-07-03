@@ -1,4 +1,3 @@
-# --- START OF traffic_app/models.py ---
 import enum
 from datetime import datetime
 from sqlalchemy import Enum as SQLAlchemyEnum # Alias to avoid conflict if we use our own Enum
@@ -127,5 +126,3 @@ class Scenario(db.Model):
     @property
     def has_attin(self):
         return self.has_file('attin')
-
-# --- END OF traffic_app/models.py ---

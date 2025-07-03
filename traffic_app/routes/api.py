@@ -1,13 +1,11 @@
-# --- START OF traffic_app/routes/api.py ---
 import os
 import logging
-# V-- Make sure this line correctly imports Blueprint --V
 from flask import Blueprint, request, jsonify, abort, send_from_directory, current_app
 from werkzeug.utils import secure_filename
-from ..extensions import db  # Import from the extensions module in the parent directory
-from ..models import Study, Scenario, Configuration, ProcessingStatus # Import from models module
-from ..utils import get_scenario_folder_path         # Import from utils module
-from traffic_app.processing import process_traffic_data # Use absolute import
+from ..extensions import db 
+from ..models import Study, Scenario, Configuration, ProcessingStatus
+from ..utils import get_scenario_folder_path
+from traffic_app.processing import process_traffic_data
 from ..utils import (
     validate_file_extension, 
     save_uploaded_file, 
@@ -22,10 +20,8 @@ from ..utils import (
     cleanup_all_empty_folders
 )
 
-# V-- Define the Blueprint --V
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-# --- API Endpoints ---
 
 @api_bp.route('/studies', methods=['GET', 'POST'])
 def studies():
@@ -59,7 +55,7 @@ def studies():
             db.session.rollback()
             logging.exception(f"API: Error creating study '{study_name}'")
             return jsonify({"error": f"Database error: {e}"}), 500
-    else: # GET
+    else:
         try:
             # Order by created_at in descending order (newest first)
             study_objects = Study.query.order_by(Study.created_at.desc()).all()
@@ -296,7 +292,6 @@ def upload_scenario_file(study_id, scenario_id):
     if not is_valid:
         return jsonify({"error": error_message}), 400
 
-    # --- BEGIN MODIFICATION: Delete existing file if it exists ---
     existing_file_path_relative = None
     if file_type == 'am_csv' and scenario.am_csv_path:
         existing_file_path_relative = scenario.am_csv_path
@@ -317,14 +312,11 @@ def upload_scenario_file(study_id, scenario_id):
             else:
                 logging.warning(f"API: Existing file path '{existing_file_path_relative}' found in DB for scenario {scenario_id} (type {file_type}), but file not found at '{existing_file_path_absolute}'.")
         except Exception as e:
-            # Log the error but proceed with uploading the new file.
-            # The old path in DB is already cleared.
             logging.error(f"API: Error deleting existing file '{existing_file_path_relative}' for scenario {scenario_id}: {e}")
-    # --- END MODIFICATION ---
 
     try:
         # Save the file and get the relative path
-        original_filename = secure_filename(file.filename) # Get the original filename securely
+        original_filename = secure_filename(file.filename)
 
         relative_save_path, filename = save_uploaded_file(file, study_id, scenario_id, file_type)
         logging.info(f"API: Saved file '{filename}' (original: '{original_filename}') for scenario {scenario_id} (type: {file_type}) to {relative_save_path}")
@@ -950,5 +942,3 @@ def delete_scenario_file_typed(study_id, scenario_id, file_type_id):
         "has_merged": bool(scenario.merged_csv_path),
         "has_attin": bool(scenario.attin_txt_path)
     }), 200
-
-# --- END OF traffic_app/routes/api.py ---

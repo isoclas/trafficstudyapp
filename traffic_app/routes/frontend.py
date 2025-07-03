@@ -1,4 +1,3 @@
-# --- START OF traffic_app/routes/frontend.py ---
 import logging
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, make_response, session
@@ -904,5 +903,3 @@ def show_delete_confirmation():
                          method=method,
                          target=target,
                          swap=swap)
-
-# --- END OF traffic_app/routes/frontend.py ---

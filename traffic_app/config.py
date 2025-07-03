@@ -184,5 +184,3 @@ config = {
 # os.makedirs(os.path.join(BASE_DIR, "instance"), exist_ok=True)
 # os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 # os.makedirs(Config.OUTPUT_FOLDER, exist_ok=True)
-
-# --- END OF traffic_app/config.py ---

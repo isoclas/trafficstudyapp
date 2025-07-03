@@ -1,4 +1,3 @@
-# --- START OF traffic_app/error_handlers.py ---
 import logging
 from flask import render_template, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -75,5 +74,3 @@ def handle_error(error, default_code=500, default_message='Internal Server Error
                           error_code=code,
                           error_name=default_message,
                           error_description=description), code
-
-# --- END OF traffic_app/error_handlers.py ---

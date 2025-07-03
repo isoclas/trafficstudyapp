@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Flask-Migrate Deployment Script for Render
 
@@ -177,13 +176,11 @@ def main():
             sys.exit(0)
         else:
             logger.warning("=== MIGRATION PROCESS COMPLETED WITH WARNINGS ===")
-            # Don't fail the build - let the app try to start
             sys.exit(0)
     except Exception as e:
         logger.error(f"=== MIGRATION PROCESS FAILED: {e} ===")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
-        # Don't fail the build - let the app try to start
         sys.exit(0)
 
 if __name__ == '__main__':

@@ -1,4 +1,3 @@
-# --- START OF traffic_app/utils.py ---
 import os
 import shutil
 from flask import current_app
@@ -427,5 +426,3 @@ def cleanup_all_empty_folders():
         current_app.logger.error(f"Error in cleanup_all_empty_folders: {str(e)}")
         
     return uploads_count, outputs_count
-
-# --- END OF traffic_app/utils.py ---

@@ -1,4 +1,3 @@
-# --- START OF traffic_app/api_client.py ---
 import logging
 import os
 import requests
@@ -6,7 +5,6 @@ from datetime import datetime
 from flask import url_for, current_app
 from typing import Dict, List, Any, Tuple, Optional, Union
 
-# Import models and db for direct database access in production
 try:
     from .models import Study, Configuration, Scenario, ProcessingStatus
     from .extensions import db
@@ -1374,5 +1372,3 @@ def delete_scenario_file_api(study_id: int, scenario_id: int, file_type_id: str)
         return True, response_data # response_data should be the updated scenario details
     else:
         return False, error
-
-# --- END OF traffic_app/api_client.py ---

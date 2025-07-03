@@ -51,60 +51,83 @@ def fix_missing_columns():
         from traffic_app import create_app
         from traffic_app.extensions import db
         from sqlalchemy import text, inspect
-        from traffic_app.models import Configuration
         
         app = create_app()
         
         with app.app_context():
+            # First ensure all tables exist
+            logger.info("Ensuring all tables exist...")
+            db.create_all()
+            
             inspector = inspect(db.engine)
+            table_names = inspector.get_table_names()
+            logger.info(f"Available tables: {table_names}")
             
             # Fix known issue with trip_assign_count column
-            if 'configuration' in inspector.get_table_names():
+            if 'configuration' in table_names:
                 existing_columns = [col['name'] for col in inspector.get_columns('configuration')]
+                logger.info(f"Existing columns in configuration table: {existing_columns}")
                 
                 if 'trip_assign_count' not in existing_columns:
                     logger.info("Adding missing trip_assign_count column...")
                     
-                    # Add the missing column
-                    add_column_sql = """
-                    ALTER TABLE configuration 
-                    ADD COLUMN trip_assign_count INTEGER DEFAULT 1 NOT NULL;
-                    """
-                    
-                    db.session.execute(text(add_column_sql))
-                    db.session.commit()
-                    
-                    logger.info("Successfully added trip_assign_count column.")
+                    try:
+                        # Add the missing column with proper error handling
+                        add_column_sql = """
+                        ALTER TABLE configuration 
+                        ADD COLUMN trip_assign_count INTEGER DEFAULT 1 NOT NULL;
+                        """
+                        
+                        db.session.execute(text(add_column_sql))
+                        db.session.commit()
+                        
+                        logger.info("Successfully added trip_assign_count column.")
+                        
+                        # Verify the column was added
+                        inspector = inspect(db.engine)
+                        updated_columns = [col['name'] for col in inspector.get_columns('configuration')]
+                        if 'trip_assign_count' in updated_columns:
+                            logger.info("Column addition verified successfully.")
+                        else:
+                            logger.error("Column addition verification failed.")
+                            
+                    except Exception as col_error:
+                        logger.error(f"Failed to add trip_assign_count column: {col_error}")
+                        # Try alternative approach
+                        try:
+                            logger.info("Trying alternative column addition approach...")
+                            db.session.rollback()
+                            
+                            # Check if column exists using a different method
+                            check_sql = """
+                            SELECT column_name 
+                            FROM information_schema.columns 
+                            WHERE table_name = 'configuration' 
+                            AND column_name = 'trip_assign_count';
+                            """
+                            result = db.session.execute(text(check_sql)).fetchone()
+                            
+                            if not result:
+                                db.session.execute(text(add_column_sql))
+                                db.session.commit()
+                                logger.info("Successfully added column using alternative method.")
+                            else:
+                                logger.info("Column already exists (detected via information_schema).")
+                                
+                        except Exception as alt_error:
+                            logger.error(f"Alternative column addition also failed: {alt_error}")
+                            db.session.rollback()
                 else:
                     logger.info("Column trip_assign_count already exists.")
-            
-            # Check for any other missing columns in Configuration table
-            # This is a more general approach that could be expanded to other models
-            logger.info("Checking for other missing columns in Configuration table...")
-            
-            # Get all model columns
-            model_columns = Configuration.__table__.columns.keys()
-            
-            # Get existing database columns
-            if 'configuration' in inspector.get_table_names():
-                existing_columns = [col['name'] for col in inspector.get_columns('configuration')]
-                
-                # Find missing columns
-                missing_columns = set(model_columns) - set(existing_columns)
-                
-                if missing_columns:
-                    logger.info(f"Found additional missing columns: {missing_columns}")
-                    # Here you could add code to automatically add these columns
-                    # For now, we'll just log them so they can be handled by Flask-Migrate
-                else:
-                    logger.info("No additional missing columns found.")
+            else:
+                logger.warning("Configuration table not found. This might be a new database.")
             
             return True
             
     except Exception as e:
-        logger.warning(f"Column fix failed: {e}")
+        logger.error(f"Column fix failed: {e}")
         import traceback
-        logger.warning(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return False
 
 def setup_flask_migrate():

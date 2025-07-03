@@ -185,8 +185,8 @@ def configure_study(study_id):
         for i in range(1, n + 1):
             scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'No_Build_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
             scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Build_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
-            if incl['include_bg_dist']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Background_Development_Distribution_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
-            if incl['include_bg_assign']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Background_Development_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+            if incl['include_bg_dist']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'BG_Dev_Distribution_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+            if incl['include_bg_assign']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'BG_Dev_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
 
             # Create multiple trip distribution scenarios if needed
             if incl['include_trip_dist']:

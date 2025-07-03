@@ -16,7 +16,7 @@ The issue stemmed from Flask-Migrate not handling schema changes properly when:
 ## Automatic Solution (Implemented)
 
 The application now includes **multiple layers of automatic protection** to prevent this issue:
-
+dfsdfsdfsdfsdfs
 ### 1. Application Startup Check
 The Flask application (`traffic_app/__init__.py`) now includes a schema validation function that runs on every startup:
 

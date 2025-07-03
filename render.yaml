@@ -8,6 +8,7 @@ services:
       npm install
       npm run build
       pip install -r requirements.txt
+      python migrate.py
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
@@ -42,6 +43,7 @@ services:
       npm install
       npm run build
       pip install -r requirements.txt
+      python migrate.py
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION

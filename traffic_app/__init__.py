@@ -60,6 +60,11 @@ def create_app(config_name=None):
     db.init_app(app)
     app.logger.info("Database Initialized.")
     
+    # Initialize Flask-Migrate
+    from flask_migrate import Migrate
+    migrate = Migrate(app, db)
+    app.logger.info("Flask-Migrate Initialized.")
+    
     # Import models so SQLAlchemy knows about them
     from . import models
     

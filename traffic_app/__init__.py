@@ -30,7 +30,14 @@ def create_app(config_name=None):
     app.config.from_pyfile('config.py', silent=True)
     
     # Set the database URI using the classmethod
-    app.config['SQLALCHEMY_DATABASE_URI'] = config_class.get_database_uri()
+    db_uri = config_class.get_database_uri()
+    if 'sslmode' in db_uri:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            'connect_args': {'sslmode': 'require'}
+        }
+        # Remove sslmode from the URI as it's now in connect_args
+        db_uri = db_uri.split('?')[0]
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     
     # Initialize configuration-specific settings
     if hasattr(config_class, 'init_app'):

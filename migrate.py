@@ -52,8 +52,10 @@ def fix_missing_columns():
         from sqlalchemy import text, inspect
         
         app = create_app()
+        logger.info(f"App created successfully. Database URL: {app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')[:50]}...")
         
         with app.app_context():
+            logger.info("Entered app context for column fixes...")
             # First ensure all tables exist
             logger.info("Ensuring all tables exist...")
             db.create_all()
@@ -151,7 +153,30 @@ def fix_missing_columns():
                             
                     except Exception as col_error:
                         logger.error(f"Failed to add order_index column: {col_error}")
-                        db.session.rollback()
+                        # Try alternative approach
+                        try:
+                            logger.info("Trying alternative order_index column addition approach...")
+                            db.session.rollback()
+                            
+                            # Check if column exists using a different method
+                            check_sql = """
+                            SELECT column_name 
+                            FROM information_schema.columns 
+                            WHERE table_name = 'scenario' 
+                            AND column_name = 'order_index';
+                            """
+                            result = db.session.execute(text(check_sql)).fetchone()
+                            
+                            if not result:
+                                db.session.execute(text(add_column_sql))
+                                db.session.commit()
+                                logger.info("Successfully added order_index column using alternative method.")
+                            else:
+                                logger.info("order_index column already exists (detected via information_schema).")
+                                
+                        except Exception as alt_error:
+                            logger.error(f"Alternative order_index column addition also failed: {alt_error}")
+                            db.session.rollback()
                 else:
                     logger.info("Column order_index already exists.")
             else:

@@ -136,6 +136,12 @@ def setup_flask_migrate():
     os.environ['FLASK_APP'] = 'app.py'
     
     logger.info("Starting Flask-Migrate setup for Render deployment...")
+
+    from traffic_app import create_app
+    from traffic_app.extensions import db
+    app = create_app()
+    with app.app_context():
+        db.create_all()
     
     # First try direct column addition as fallback
     if add_trip_assign_count_column():

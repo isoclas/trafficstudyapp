@@ -1,13 +1,11 @@
-# --- START OF traffic_app/routes/api.py ---
 import os
 import logging
-# V-- Make sure this line correctly imports Blueprint --V
 from flask import Blueprint, request, jsonify, abort, send_from_directory, current_app
 from werkzeug.utils import secure_filename
-from ..extensions import db  # Import from the extensions module in the parent directory
-from ..models import Study, Scenario, Configuration, ProcessingStatus # Import from models module
-from ..utils import get_scenario_folder_path         # Import from utils module
-from traffic_app.processing import process_traffic_data # Use absolute import
+from ..extensions import db 
+from ..models import Study, Scenario, Configuration, ProcessingStatus
+from ..utils import get_scenario_folder_path
+from traffic_app.processing import process_traffic_data
 from ..utils import (
     validate_file_extension, 
     save_uploaded_file, 
@@ -22,10 +20,8 @@ from ..utils import (
     cleanup_all_empty_folders
 )
 
-# V-- Define the Blueprint --V
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-# --- API Endpoints ---
 
 @api_bp.route('/studies', methods=['GET', 'POST'])
 def studies():
@@ -59,7 +55,7 @@ def studies():
             db.session.rollback()
             logging.exception(f"API: Error creating study '{study_name}'")
             return jsonify({"error": f"Database error: {e}"}), 500
-    else: # GET
+    else:
         try:
             # Order by created_at in descending order (newest first)
             study_objects = Study.query.order_by(Study.created_at.desc()).all()
@@ -158,6 +154,16 @@ def configure_study(study_id):
         except (ValueError, TypeError):
             trip_dist_count = 1
 
+    # Get trip assignment count if trip assignment is included
+    trip_assign_count = 1
+    if incl['include_trip_assign'] and 'trip_assign_count' in data:
+        try:
+            trip_assign_count = int(data['trip_assign_count'])
+            if trip_assign_count < 1:
+                trip_assign_count = 1
+        except (ValueError, TypeError):
+            trip_assign_count = 1
+
     try:
         # Create a new configuration
         new_config = Configuration(
@@ -168,7 +174,8 @@ def configure_study(study_id):
             include_bg_assign=incl['include_bg_assign'],
             include_trip_dist=incl['include_trip_dist'],
             trip_dist_count=trip_dist_count,
-            include_trip_assign=incl['include_trip_assign']
+            include_trip_assign=incl['include_trip_assign'],
+            trip_assign_count=trip_assign_count
         )
         db.session.add(new_config)
         db.session.flush()  # Get the new configuration ID
@@ -178,8 +185,8 @@ def configure_study(study_id):
         for i in range(1, n + 1):
             scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'No_Build_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
             scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Build_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
-            if incl['include_bg_dist']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Background_Development_Distribution_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
-            if incl['include_bg_assign']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Background_Development_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+            if incl['include_bg_dist']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'BG_Dev_Distribution_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+            if incl['include_bg_assign']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'BG_Dev_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
 
             # Create multiple trip distribution scenarios if needed
             if incl['include_trip_dist']:
@@ -190,7 +197,14 @@ def configure_study(study_id):
                     else:
                         scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Distribution_{j}_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
 
-            if incl['include_trip_assign']: scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+            # Create multiple trip assignment scenarios if needed
+            if incl['include_trip_assign']:
+                for j in range(1, trip_assign_count + 1):
+                    # If there's only one trip assignment, don't add a number suffix
+                    if trip_assign_count == 1:
+                        scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Assignment_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
+                    else:
+                        scenarios_to_add.append(Scenario(study_id=study.id, configuration_id=new_config.id, name=f'Trip_Assignment_{j}_Phase_{i}', status=ProcessingStatus.PENDING_FILES))
 
         db.session.add_all(scenarios_to_add)
         db.session.commit()
@@ -278,7 +292,6 @@ def upload_scenario_file(study_id, scenario_id):
     if not is_valid:
         return jsonify({"error": error_message}), 400
 
-    # --- BEGIN MODIFICATION: Delete existing file if it exists ---
     existing_file_path_relative = None
     if file_type == 'am_csv' and scenario.am_csv_path:
         existing_file_path_relative = scenario.am_csv_path
@@ -299,14 +312,11 @@ def upload_scenario_file(study_id, scenario_id):
             else:
                 logging.warning(f"API: Existing file path '{existing_file_path_relative}' found in DB for scenario {scenario_id} (type {file_type}), but file not found at '{existing_file_path_absolute}'.")
         except Exception as e:
-            # Log the error but proceed with uploading the new file.
-            # The old path in DB is already cleared.
             logging.error(f"API: Error deleting existing file '{existing_file_path_relative}' for scenario {scenario_id}: {e}")
-    # --- END MODIFICATION ---
 
     try:
         # Save the file and get the relative path
-        original_filename = secure_filename(file.filename) # Get the original filename securely
+        original_filename = secure_filename(file.filename)
 
         relative_save_path, filename = save_uploaded_file(file, study_id, scenario_id, file_type)
         logging.info(f"API: Saved file '{filename}' (original: '{original_filename}') for scenario {scenario_id} (type: {file_type}) to {relative_save_path}")
@@ -932,5 +942,3 @@ def delete_scenario_file_typed(study_id, scenario_id, file_type_id):
         "has_merged": bool(scenario.merged_csv_path),
         "has_attin": bool(scenario.attin_txt_path)
     }), 200
-
-# --- END OF traffic_app/routes/api.py ---

@@ -1,4 +1,3 @@
-# --- START OF traffic_app/extensions.py ---
 from flask_sqlalchemy import SQLAlchemy
 
 # Configure SQLAlchemy with engine options for better connection handling
@@ -10,4 +9,3 @@ db = SQLAlchemy(engine_options={
         'connect_timeout': 10
     }
 })
-# --- END OF traffic_app/extensions.py ---

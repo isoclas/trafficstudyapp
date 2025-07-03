@@ -1,4 +1,3 @@
-# --- START OF traffic_app/models.py ---
 import enum
 from datetime import datetime
 from sqlalchemy import Enum as SQLAlchemyEnum # Alias to avoid conflict if we use our own Enum
@@ -43,6 +42,7 @@ class Configuration(db.Model):
     include_trip_dist: Mapped[bool] = mapped_column(db.Boolean, default=False)
     trip_dist_count: Mapped[int] = mapped_column(db.Integer, default=1)
     include_trip_assign: Mapped[bool] = mapped_column(db.Boolean, default=False)
+    trip_assign_count: Mapped[int] = mapped_column(db.Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow, nullable=False)
     study_id: Mapped[int] = mapped_column(db.ForeignKey('study.id'), nullable=False)
 
@@ -126,5 +126,3 @@ class Scenario(db.Model):
     @property
     def has_attin(self):
         return self.has_file('attin')
-
-# --- END OF traffic_app/models.py ---

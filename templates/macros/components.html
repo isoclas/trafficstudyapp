@@ -79,7 +79,6 @@
             {% if badges %}
                 <span data-popover-target="popover-{{ id }}" data-popover-placement="right" class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300 cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 flex-shrink-0 mr-2">Details</span>
             {% endif %}
-            <!--badge-->
 
             <!--progress bar-->
             <div class="w-24 sm:w-32 md:w-40 lg:w-48 xl:w-56 2xl:w-64 bg-gray-200 rounded-full dark:bg-gray-700 overflow-hidden flex-shrink-0">
@@ -89,17 +88,6 @@
                   style="width: 0%">
                 </div>
             </div>
-            <!--progress bar-->
-
-            <!--add scenario-->
-            <!-- <button type="button"
-            title="Add scenario"
-            class="pointer-events-auto cursor-pointer focus:outline-none text-white bg-white focus:ring-0 focus:ring-red-300 font-medium rounded-lg text-sm px-2.5 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
-            <svg class="w-6 h-6 text-gray-600 hover:text-blue-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9V4a1 1 0 0 0-1-1H8.914a1 1 0 0 0-.707.293L4.293 7.207A1 1 0 0 0 4 7.914V20a1 1 0 0 0 1 1h4M9 3v4a1 1 0 0 1-1 1H4m11 6v4m-2-2h4m3 0a5 5 0 1 1-10 0 5 5 0 0 1 10 0Z"/>
-              </svg>              
-            </button> -->
-            <!--add scenario-->
 
         </button>
         {% if delete_button and study_id %}
@@ -177,10 +165,6 @@
                                class="btn btn-sm btn-info me-2 cursor-pointer font-medium text-blue-600 dark:text-blue-500 hover:underline">
                                 <span class="htmx-indicator" role="status" aria-hidden="true"></span>
                                 View
-                                <!-- <svg class="w-5 h-5 text-gray-600 hover:text-blue-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/>
-                                    <path stroke="currentColor" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                                </svg> -->
                             </a>
                             <button type="button"
                                     class="cursor-pointer btn btn-sm btn-danger"

@@ -121,6 +121,42 @@ def fix_missing_columns():
             else:
                 logger.warning("Configuration table not found. This might be a new database.")
             
+            # Fix missing order_index column in scenario table
+            if 'scenario' in table_names:
+                existing_columns = [col['name'] for col in inspector.get_columns('scenario')]
+                logger.info(f"Existing columns in scenario table: {existing_columns}")
+                
+                if 'order_index' not in existing_columns:
+                    logger.info("Adding missing order_index column...")
+                    
+                    try:
+                        # Add the missing column with proper error handling
+                        add_column_sql = """
+                        ALTER TABLE scenario 
+                        ADD COLUMN order_index INTEGER DEFAULT 0 NOT NULL;
+                        """
+                        
+                        db.session.execute(text(add_column_sql))
+                        db.session.commit()
+                        
+                        logger.info("Successfully added order_index column.")
+                        
+                        # Verify the column was added
+                        inspector = inspect(db.engine)
+                        updated_columns = [col['name'] for col in inspector.get_columns('scenario')]
+                        if 'order_index' in updated_columns:
+                            logger.info("order_index column addition verified successfully.")
+                        else:
+                            logger.error("order_index column addition verification failed.")
+                            
+                    except Exception as col_error:
+                        logger.error(f"Failed to add order_index column: {col_error}")
+                        db.session.rollback()
+                else:
+                    logger.info("Column order_index already exists.")
+            else:
+                logger.warning("Scenario table not found. This might be a new database.")
+            
             return True
             
     except Exception as e:

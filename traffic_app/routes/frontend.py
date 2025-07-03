@@ -903,3 +903,38 @@ def show_delete_confirmation():
                          method=method,
                          target=target,
                          swap=swap)
+
+@frontend_bp.route('/study/<int:study_id>/configuration/<int:config_id>/scenarios/reorder', methods=['POST'])
+def reorder_scenarios(study_id, config_id):
+    """Handle scenario reordering via HTMX."""
+    logging.info(f"Frontend: POST request received for reordering scenarios in config {config_id}, study {study_id}")
+    
+    try:
+        # Get the scenario IDs from the form data
+        scenario_ids = request.form.getlist('scenario')
+        logging.info(f"Received scenario order: {scenario_ids}")
+        
+        # Update the order in the database
+        from ..models import Scenario
+        from ..extensions import db
+        
+        for index, scenario_id in enumerate(scenario_ids):
+            scenario = Scenario.query.filter_by(
+                id=int(scenario_id), 
+                study_id=study_id, 
+                configuration_id=config_id
+            ).first()
+            if scenario:
+                scenario.order_index = index
+                logging.info(f"Updated scenario {scenario_id} order to {index}")
+        
+        db.session.commit()
+        logging.info("Scenario reordering completed successfully")
+        
+        # Return success response for HTMX
+        return '', 200
+        
+    except Exception as e:
+        logging.error(f"Error reordering scenarios: {e}")
+        db.session.rollback()
+        return f"Error reordering scenarios: {str(e)}", 500

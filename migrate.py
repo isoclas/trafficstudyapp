@@ -94,6 +94,8 @@ def add_trip_assign_count_column():
                         'host': parsed_url.hostname,
                         'port': parsed_url.port or 5432
                     }
+                    if 'sslmode' in db_url:
+                        db_params['sslmode'] = 'require'
                     
                     # Connect directly to PostgreSQL
                     logger.info(f"Connecting to PostgreSQL at {db_params['host']}:{db_params['port']}")

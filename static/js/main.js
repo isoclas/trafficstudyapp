@@ -1,13 +1,14 @@
 // This prevents variable redeclaration when HTMX reloads the page
 (function() {
     document.addEventListener('htmx:afterSwap', function(event) {
-        // Only reset accordion state if the swap target is not modal-container or scenarios-container
+        // Only reset accordion state if the swap target is not modal-container, scenarios-container, or table-container
         const target = event.target;
         const isModalSwap = target && (target.id === 'modal-container' || target.closest('#modal-container'));
         const isScenariosSwap = target && target.classList && target.classList.contains('scenarios-container');
+        const isTableSwap = target && target.classList && target.classList.contains('table-container');
         
-        // Skip accordion reset for modal and scenarios container swaps
-        if (isModalSwap || isScenariosSwap) {
+        // Skip accordion reset for modal, scenarios container, and table container swaps
+        if (isModalSwap || isScenariosSwap || isTableSwap) {
             return;
         }
         
@@ -75,6 +76,7 @@
             var sortableInstance = new Sortable(sortable.querySelector('tbody') || sortable, {
                 animation: 150,
                 ghostClass: 'opacity-50',
+                handle: '.drag-handle', // Only allow dragging by the handle
                 
                 // Make the `.htmx-indicator` unsortable
                 filter: ".htmx-indicator",

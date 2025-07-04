@@ -19,7 +19,7 @@
                     config_id=config.id
                 ) %}
                     <div class="scenarios-container"
-                         hx-get="{{ url_for('frontend.get_scenarios_for_config', study_id=study_id, config_id=config.id) }}"
+                         hx-get="{{ url_for('frontend.get_scenarios_skeleton', study_id=study_id, config_id=config.id) }}"
                          hx-trigger="load"
                          hx-indicator=".scenarios-spinner-{{ config.id }}">
                         <div class="d-flex justify-content-center">

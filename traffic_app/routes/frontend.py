@@ -220,6 +220,35 @@ def study(study_id):
                           analyst_name=analyst_name, configurations=configurations)
 
 
+@frontend_bp.route('/study/create/skeleton', methods=['POST'])
+def create_study_skeleton():
+    """Show skeleton loader and trigger actual study creation."""
+    study_name = request.form.get('name')
+    analyst_name = request.form.get('analyst_name')
+    
+    if not study_name or not study_name.strip():
+        # Return error without skeleton if validation fails
+        studies, error = api_client.get_studies()
+        return render_template('partials/studies_list.html', studies=studies)
+    elif not analyst_name or not analyst_name.strip():
+        # Return error without skeleton if validation fails
+        studies, error = api_client.get_studies()
+        return render_template('partials/studies_list.html', studies=studies)
+    
+    # Return skeleton loader with HTMX trigger to create the actual study
+    skeleton_html = render_template_string("""
+    {% from "macros/components.html" import skeleton_study_list %}
+    <div id="studies-list" 
+         hx-post="{{ url_for('frontend.create_study_frontend') }}"
+         hx-trigger="load"
+         hx-vals='{"name": "{{ study_name }}", "analyst_name": "{{ analyst_name }}"}'
+         hx-swap="outerHTML">
+        {{ skeleton_study_list() }}
+    </div>
+    """, study_name=study_name, analyst_name=analyst_name)
+    
+    return skeleton_html
+
 @frontend_bp.route('/study/create', methods=['POST'])
 def create_study_frontend():
     """Create a new study."""
@@ -259,6 +288,45 @@ def create_study_frontend():
 
     # For regular requests, redirect to index
     return redirect(url_for('frontend.index'))
+
+@frontend_bp.route('/study/<int:study_id>/configure/skeleton', methods=['POST'])
+def configure_study_skeleton(study_id):
+    """Show skeleton loader and trigger actual configuration creation."""
+    config_name = request.form.get('config_name', '').strip()
+    if not config_name:
+        # Return error without skeleton if validation fails
+        configurations, error = api_client.get_configurations(study_id)
+        return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
+    
+    # Get all form data for passing to the actual endpoint
+    form_data = {
+        'config_name': config_name,
+        'phases_n': request.form.get('phases_n'),
+        'include_bg_dist': 'include_bg_dist' in request.form,
+        'include_bg_assign': 'include_bg_assign' in request.form,
+        'include_trip_dist': 'include_trip_dist' in request.form,
+        'trip_dist_count': request.form.get('trip_dist_count'),
+        'include_trip_assign': 'include_trip_assign' in request.form,
+        'trip_assign_count': request.form.get('trip_assign_count')
+    }
+    
+    # Convert form data to JSON string for hx-vals
+    import json
+    form_data_json = json.dumps(form_data).replace('"', '&quot;')
+    
+    # Return skeleton loader with HTMX trigger to create the actual configuration
+    skeleton_html = render_template_string("""
+    {% from "macros/components.html" import skeleton_configuration %}
+    <div id="configurations-list" 
+         hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
+         hx-trigger="load"
+         hx-vals="{{ form_data_json }}"
+         hx-swap="outerHTML">
+        {{ skeleton_configuration() }}
+    </div>
+    """, study_id=study_id, form_data_json=form_data_json)
+    
+    return skeleton_html
 
 @frontend_bp.route('/study/<int:study_id>/configure', methods=['POST'])
 def configure_study_frontend(study_id):
@@ -335,6 +403,21 @@ def configure_study_frontend(study_id):
     # For regular requests, redirect to study page
     return redirect(url_for('frontend.study', study_id=study_id))
 
+
+@frontend_bp.route('/study/<int:study_id>/configuration/<int:config_id>/scenarios/skeleton')
+def get_scenarios_skeleton(study_id, config_id):
+    """Show skeleton loader and trigger actual scenarios loading."""
+    # Return skeleton loader with HTMX trigger to load the actual scenarios
+    skeleton_html = render_template_string("""
+    {% from "macros/components.html" import skeleton_scenario_list %}
+    <div hx-get="{{ url_for('frontend.get_scenarios_for_config', study_id=study_id, config_id=config_id) }}"
+         hx-trigger="load"
+         hx-swap="outerHTML">
+        {{ skeleton_scenario_list() }}
+    </div>
+    """, study_id=study_id, config_id=config_id)
+    
+    return skeleton_html
 
 @frontend_bp.route('/study/<int:study_id>/configuration/<int:config_id>/scenarios')
 def get_scenarios_for_config(study_id, config_id):
@@ -490,6 +573,37 @@ def detect_file_type_from_file(file):
     file.seek(current_position)
 
     return file_type
+
+
+@frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>/process/skeleton', methods=['POST'])
+def process_scenario_skeleton(study_id, scenario_id):
+    """Shows skeleton loader immediately and triggers actual processing."""
+    # Render skeleton loader using the macro
+    skeleton_html = render_template_string("""
+    {% from 'macros/components.html' import skeleton_download_files %}
+    {{ skeleton_download_files() }}
+    """)
+    
+    # Generate the URL for the actual processing endpoint
+    process_url = url_for('frontend.process_scenario_frontend', study_id=study_id, scenario_id=scenario_id)
+    
+    response = f"""
+    <!-- Main response for the target element -->
+    <span>Processing...</span>
+    
+    <!-- Out-of-band update to show skeleton loader -->
+    <div id="scenario-downloads" hx-swap-oob="innerHTML">
+        {skeleton_html}
+    </div>
+    
+    <!-- Trigger actual processing after skeleton is shown -->
+    <div hx-post="{process_url}"
+         hx-target="#process-response"
+         hx-swap="innerHTML"
+         hx-trigger="load delay:100ms"></div>
+    """
+    
+    return response
 
 
 @frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>/process', methods=['POST'])

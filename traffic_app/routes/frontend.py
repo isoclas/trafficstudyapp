@@ -235,17 +235,56 @@ def create_study_skeleton():
         studies, error = api_client.get_studies()
         return render_template('partials/studies_list.html', studies=studies)
     
-    # Return skeleton loader with HTMX trigger to create the actual study
+    # Get current studies and add skeleton row at the top
+    studies, error = api_client.get_studies()
+    
+    # Return current studies list with skeleton row at top and HTMX trigger to create the actual study
     skeleton_html = render_template_string("""
-    {% from "macros/components.html" import skeleton_study_list %}
-    <div id="studies-list" 
-         hx-post="{{ url_for('frontend.create_study_frontend') }}"
-         hx-trigger="load"
-         hx-vals='{"name": "{{ study_name }}", "analyst_name": "{{ analyst_name }}"}'
-         hx-swap="outerHTML">
-        {{ skeleton_study_list() }}
+    {% from "macros/components.html" import skeleton_study_item, study_list_item %}
+    <div id="studies-list" class="fade-me-in">
+        {% if studies %}
+            <div class="relative">
+                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-2 py-3">Study / Analyst</th>
+                            <th scope="col" class="px-2 py-3">Date</th>
+                            <th scope="col" class="px-2 py-3">Status</th>
+                            <th scope="col" class="px-2 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ skeleton_study_item() }}
+                        {% for study in studies %}
+                            {{ study_list_item(study) }}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="relative">
+                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-2 py-3">Study / Analyst</th>
+                            <th scope="col" class="px-2 py-3">Date</th>
+                            <th scope="col" class="px-2 py-3">Status</th>
+                            <th scope="col" class="px-2 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ skeleton_study_item() }}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        <div hx-post="{{ url_for('frontend.create_study_frontend') }}"
+             hx-trigger="load"
+             hx-vals='{"name": "{{ study_name }}", "analyst_name": "{{ analyst_name }}"}'
+             hx-swap="outerHTML"
+             hx-target="#studies-list"></div>
     </div>
-    """, study_name=study_name, analyst_name=analyst_name)
+    """, study_name=study_name, analyst_name=analyst_name, studies=studies)
     
     return skeleton_html
 
@@ -299,20 +338,13 @@ def configure_study_skeleton(study_id):
         return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
     
     # Get all form data for passing to the actual endpoint
-    form_data = {
-        'config_name': config_name,
-        'phases_n': request.form.get('phases_n'),
-        'include_bg_dist': 'include_bg_dist' in request.form,
-        'include_bg_assign': 'include_bg_assign' in request.form,
-        'include_trip_dist': 'include_trip_dist' in request.form,
-        'trip_dist_count': request.form.get('trip_dist_count'),
-        'include_trip_assign': 'include_trip_assign' in request.form,
-        'trip_assign_count': request.form.get('trip_assign_count')
-    }
-    
-    # Convert form data to JSON string for hx-vals
-    import json
-    form_data_json = json.dumps(form_data).replace('"', '&quot;')
+    phases_n = request.form.get('phases_n', '')
+    include_bg_dist = 'include_bg_dist' in request.form
+    include_bg_assign = 'include_bg_assign' in request.form
+    include_trip_dist = 'include_trip_dist' in request.form
+    trip_dist_count = request.form.get('trip_dist_count', '1')
+    include_trip_assign = 'include_trip_assign' in request.form
+    trip_assign_count = request.form.get('trip_assign_count', '1')
     
     # Return skeleton loader with HTMX trigger to create the actual configuration
     skeleton_html = render_template_string("""
@@ -320,11 +352,23 @@ def configure_study_skeleton(study_id):
     <div id="configurations-list" 
          hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
          hx-trigger="load"
-         hx-vals="{{ form_data_json }}"
          hx-swap="outerHTML">
         {{ skeleton_configuration() }}
+        <form style="display: none;" hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}" hx-trigger="load" hx-target="#configurations-list" hx-swap="outerHTML">
+            <input type="hidden" name="config_name" value="{{ config_name }}">
+            <input type="hidden" name="phases_n" value="{{ phases_n }}">
+            {% if include_bg_dist %}<input type="hidden" name="include_bg_dist" value="on">{% endif %}
+            {% if include_bg_assign %}<input type="hidden" name="include_bg_assign" value="on">{% endif %}
+            {% if include_trip_dist %}<input type="hidden" name="include_trip_dist" value="on">{% endif %}
+            <input type="hidden" name="trip_dist_count" value="{{ trip_dist_count }}">
+            {% if include_trip_assign %}<input type="hidden" name="include_trip_assign" value="on">{% endif %}
+            <input type="hidden" name="trip_assign_count" value="{{ trip_assign_count }}">
+        </form>
     </div>
-    """, study_id=study_id, form_data_json=form_data_json)
+    """, study_id=study_id, config_name=config_name, phases_n=phases_n, 
+         include_bg_dist=include_bg_dist, include_bg_assign=include_bg_assign,
+         include_trip_dist=include_trip_dist, trip_dist_count=trip_dist_count,
+         include_trip_assign=include_trip_assign, trip_assign_count=trip_assign_count)
     
     return skeleton_html
 

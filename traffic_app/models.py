@@ -63,6 +63,7 @@ class Scenario(db.Model):
     configuration_id: Mapped[int] = mapped_column(db.ForeignKey('configuration.id'), nullable=False) 
     status: Mapped[ProcessingStatus] = mapped_column(SQLAlchemyEnum(ProcessingStatus), default=ProcessingStatus.PENDING_CONFIG, nullable=False)
     status_message: Mapped[Optional[str]] = mapped_column(db.String(255), nullable=True)
+    order_index: Mapped[int] = mapped_column(db.Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

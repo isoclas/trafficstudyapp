@@ -4,12 +4,13 @@
         // Only reset accordion state if the swap target is not modal-container, scenarios-container, table-container, or configurations-list
         const target = event.target;
         const isModalSwap = target && (target.id === 'modal-container' || target.closest('#modal-container'));
-        const isScenariosSwap = target && target.classList && target.classList.contains('scenarios-container');
+        const isScenariosSwap = target && target.classList && (target.classList.contains('scenarios-container') || target.classList.contains('config-scenarios-list'));
         const isTableSwap = target && target.classList && target.classList.contains('table-container');
         const isConfigurationsSwap = target && target.id === 'configurations-list';
+        const isWithinScenariosContainer = target && target.closest('.scenarios-container');
         
-        // Skip accordion reset for modal, scenarios container, table container, and configurations list swaps
-        if (isModalSwap || isScenariosSwap || isTableSwap || isConfigurationsSwap) {
+        // Skip accordion reset for modal, scenarios container, table container, configurations list swaps, and swaps within scenarios containers
+        if (isModalSwap || isScenariosSwap || isTableSwap || isConfigurationsSwap || isWithinScenariosContainer) {
             return;
         }
         

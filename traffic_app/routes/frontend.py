@@ -335,7 +335,7 @@ def configure_study_skeleton(study_id):
     if not config_name:
         # Return error without skeleton if validation fails
         configurations, error = api_client.get_configurations(study_id)
-        return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
+        return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
     
     # Get all form data for passing to the actual endpoint
     phases_n = request.form.get('phases_n', '')
@@ -346,29 +346,36 @@ def configure_study_skeleton(study_id):
     include_trip_assign = 'include_trip_assign' in request.form
     trip_assign_count = request.form.get('trip_assign_count', '1')
     
+    # Build hx-vals string properly
+    hx_vals_parts = [
+        f'"config_name": "{config_name}"',
+        f'"phases_n": "{phases_n}"',
+        f'"trip_dist_count": "{trip_dist_count}"',
+        f'"trip_assign_count": "{trip_assign_count}"'
+    ]
+    
+    if include_bg_dist:
+        hx_vals_parts.append('"include_bg_dist": "on"')
+    if include_bg_assign:
+        hx_vals_parts.append('"include_bg_assign": "on"')
+    if include_trip_dist:
+        hx_vals_parts.append('"include_trip_dist": "on"')
+    if include_trip_assign:
+        hx_vals_parts.append('"include_trip_assign": "on"')
+    
+    hx_vals = '{' + ', '.join(hx_vals_parts) + '}'
+    
     # Return skeleton loader with HTMX trigger to create the actual configuration
     skeleton_html = render_template_string("""
     {% from "macros/components.html" import skeleton_configuration %}
     <div id="configurations-list" 
          hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
          hx-trigger="load"
+         hx-vals='{{ hx_vals }}'
          hx-swap="outerHTML">
         {{ skeleton_configuration() }}
-        <form style="display: none;" hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}" hx-trigger="load" hx-target="#configurations-list" hx-swap="outerHTML">
-            <input type="hidden" name="config_name" value="{{ config_name }}">
-            <input type="hidden" name="phases_n" value="{{ phases_n }}">
-            {% if include_bg_dist %}<input type="hidden" name="include_bg_dist" value="on">{% endif %}
-            {% if include_bg_assign %}<input type="hidden" name="include_bg_assign" value="on">{% endif %}
-            {% if include_trip_dist %}<input type="hidden" name="include_trip_dist" value="on">{% endif %}
-            <input type="hidden" name="trip_dist_count" value="{{ trip_dist_count }}">
-            {% if include_trip_assign %}<input type="hidden" name="include_trip_assign" value="on">{% endif %}
-            <input type="hidden" name="trip_assign_count" value="{{ trip_assign_count }}">
-        </form>
     </div>
-    """, study_id=study_id, config_name=config_name, phases_n=phases_n, 
-         include_bg_dist=include_bg_dist, include_bg_assign=include_bg_assign,
-         include_trip_dist=include_trip_dist, trip_dist_count=trip_dist_count,
-         include_trip_assign=include_trip_assign, trip_assign_count=trip_assign_count)
+    """, study_id=study_id, hx_vals=hx_vals)
     
     return skeleton_html
 
@@ -379,7 +386,7 @@ def configure_study_frontend(study_id):
     if not config_name:
         logging.error('Configuration name is required.')
         if request.headers.get('HX-Request'):
-            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id))
+            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id, open_config_id=None))
             return response
         return redirect(url_for('frontend.study', study_id=study_id))
 
@@ -409,7 +416,7 @@ def configure_study_frontend(study_id):
     if phases_n is None or phases_n < 0:
         logging.error('Number of phases must be a valid non-negative number.')
         if request.headers.get('HX-Request'):
-            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id))
+            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id, open_config_id=None))
             return response
     else:
         config_data = {
@@ -424,10 +431,14 @@ def configure_study_frontend(study_id):
         }
 
         data, error, status_code = api_client.configure_study(study_id, config_data)
+        new_config_id = None
 
         if status_code == 200:
             message = f'Configuration "{config_name}" created successfully!'
             status = 'success'
+            # Extract the new configuration ID from the response
+            if data and 'id' in data:
+                new_config_id = data['id']
         else:
             message = error or f'Error creating configuration.'
             status = 'danger'
@@ -441,7 +452,7 @@ def configure_study_frontend(study_id):
         if error:
             logging.error(f"Error fetching configurations for HTMX response: {error}")
 
-        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id))
+        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=new_config_id))
         return response
 
     # For regular requests, redirect to study page
@@ -749,7 +760,7 @@ def delete_configuration(study_id, config_id):
     if error:
         logging.error(f"Error fetching configurations after deletion: {error}")
 
-    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
+    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
 
 @frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>', methods=['DELETE'])
 def delete_scenario(study_id, scenario_id):
@@ -862,7 +873,7 @@ def delete_configuration_post(study_id, config_id):
         if error:
             logging.error(f"Error fetching configurations for HTMX response: {error}")
 
-        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id))
+        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None))
 
         return response
 
@@ -880,7 +891,7 @@ def get_configurations_list(study_id):
         logging.error(f"Error fetching configurations for study {study_id}: {error}")
         logging.error(f"Error loading configurations: {error}")
 
-    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
+    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
 
 @frontend_bp.route('/study/<int:study_id>/delete', methods=['POST'])
 def delete_study_post(study_id):

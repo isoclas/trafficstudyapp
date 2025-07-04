@@ -370,7 +370,7 @@ def configure_study_skeleton(study_id):
     
     hx_vals = '{' + ', '.join(hx_vals_parts) + '}'
     
-    # Return existing configurations with skeleton appended and HTMX trigger to create the actual configuration
+    # Return existing configurations with skeleton prepended and HTMX trigger to create the actual configuration
     skeleton_html = render_template_string("""
     {% from "macros/components.html" import collapsible, skeleton_configuration %}
     <div id="configurations-list" class="fade-me-in"
@@ -380,7 +380,8 @@ def configure_study_skeleton(study_id):
          hx-swap="outerHTML">
         {% if configurations %}
             <div class="hs-accordion-group">
-                {% for config in configurations %}
+                {{ skeleton_configuration() }}
+                {% for config in configurations|sort(attribute='id', reverse=true) %}
                     {% call collapsible(
                         id="config-" ~ config.id,
                         title=config.name,
@@ -397,7 +398,7 @@ def configure_study_skeleton(study_id):
                     ) %}
                         <div class="scenarios-container"
                              hx-get="{{ url_for('frontend.get_scenarios_skeleton', study_id=study_id, config_id=config.id) }}"
-                             hx-trigger="load"
+                             hx-trigger="intersect once"
                              hx-indicator=".scenarios-spinner-{{ config.id }}">
                             <div class="d-flex justify-content-center">
                                 <div class="spinner-border scenarios-spinner-{{ config.id }}" role="status">
@@ -407,7 +408,6 @@ def configure_study_skeleton(study_id):
                         </div>
                     {% endcall %}
                 {% endfor %}
-                {{ skeleton_configuration() }}
             </div>
         {% else %}
             {{ skeleton_configuration() }}

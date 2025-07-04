@@ -14,8 +14,13 @@
         
         // Add a small delay to allow the DOM to update
         setTimeout(function() {
-            // Ensure all accordions are closed by default
+            // Only close accordions that don't have the hs-accordion-active class initially set
             document.querySelectorAll('.hs-accordion').forEach(function(accordion) {
+                // Skip accordions that should be open (have hs-accordion-active class)
+                if (accordion.classList.contains('hs-accordion-active')) {
+                    return;
+                }
+                
                 accordion.classList.remove('hs-accordion-active');
 
                 const content = accordion.querySelector('.hs-accordion-content');

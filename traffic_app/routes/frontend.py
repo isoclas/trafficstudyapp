@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, make_response, session
+from flask import Blueprint, render_template, render_template_string, request, redirect, url_for, current_app, jsonify, make_response, session
 from ..utils import allowed_file # Import from local utils
 from ..extensions import db # Needed for direct DB query for study name
 from ..models import Study, Configuration # Needed for direct DB queries

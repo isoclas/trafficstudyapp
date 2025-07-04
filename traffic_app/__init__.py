@@ -57,6 +57,53 @@ def _ensure_database_schema(app, db):
         else:
             app.logger.warning("Configuration table not found during schema check.")
             
+        # Check scenario table for missing order_index column
+        if 'scenario' in inspector.get_table_names():
+            existing_columns = [col['name'] for col in inspector.get_columns('scenario')]
+            
+            if 'order_index' not in existing_columns:
+                app.logger.info("Adding missing order_index column to scenario table...")
+                
+                try:
+                    add_column_sql = """
+                    ALTER TABLE scenario 
+                    ADD COLUMN order_index INTEGER DEFAULT 0 NOT NULL;
+                    """
+                    
+                    db.session.execute(text(add_column_sql))
+                    db.session.commit()
+                    
+                    app.logger.info("Successfully added order_index column during app startup.")
+                    
+                except Exception as col_error:
+                    app.logger.warning(f"Failed to add order_index column: {col_error}")
+                    db.session.rollback()
+                    
+                    # Try alternative check
+                    try:
+                        check_sql = """
+                        SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_name = 'scenario' 
+                        AND column_name = 'order_index';
+                        """
+                        result = db.session.execute(text(check_sql)).fetchone()
+                        
+                        if not result:
+                            db.session.execute(text(add_column_sql))
+                            db.session.commit()
+                            app.logger.info("Successfully added order_index column using alternative method.")
+                        else:
+                            app.logger.info("order_index column already exists (detected via information_schema).")
+                            
+                    except Exception as alt_error:
+                        app.logger.error(f"All attempts to add order_index column failed: {alt_error}")
+                        db.session.rollback()
+            else:
+                app.logger.info("order_index column already exists in scenario table.")
+        else:
+            app.logger.warning("Scenario table not found during schema check.")
+            
     except Exception as e:
         app.logger.error(f"Database schema check failed: {e}")
         import traceback

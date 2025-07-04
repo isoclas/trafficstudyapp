@@ -356,8 +356,7 @@
 {% macro skeleton_configuration() %}
 <div class="animate-pulse">
     <div class="hs-accordion-group">
-        {% for i in range(2) %}
-        <div class="max-h-[500px] bg-white border border-gray-200 -mt-px first:rounded-t-lg last:rounded-b-lg dark:bg-neutral-800 dark:border-neutral-700">
+        <div class="max-h-[500px] hs-accordion hs-accordion-active bg-white border border-gray-200 -mt-px first:rounded-t-lg last:rounded-b-lg dark:bg-neutral-800 dark:border-neutral-700">
             <div class="flex items-center justify-between w-full py-4 px-3 sm:px-5">
                 <div class="flex items-center gap-x-2 sm:gap-x-4 flex-1 min-w-0">
                     <div class="h-6 w-6 bg-gray-200 rounded dark:bg-gray-700"></div>
@@ -367,8 +366,16 @@
                 </div>
                 <div class="h-8 w-8 bg-gray-200 rounded-lg dark:bg-gray-700"></div>
             </div>
+            <div class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" style="height: auto;">
+                <div class="pb-4 px-5 max-h-[400px] overflow-y-auto custom-scrollbar">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading scenarios...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% endfor %}
     </div>
 </div>
 {% endmacro %}

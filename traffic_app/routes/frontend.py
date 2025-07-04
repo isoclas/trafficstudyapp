@@ -337,6 +337,11 @@ def configure_study_skeleton(study_id):
         configurations, error = api_client.get_configurations(study_id)
         return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
     
+    # Get existing configurations to show them with the skeleton
+    configurations, error = api_client.get_configurations(study_id)
+    if error:
+        configurations = []
+    
     # Get all form data for passing to the actual endpoint
     phases_n = request.form.get('phases_n', '')
     include_bg_dist = 'include_bg_dist' in request.form
@@ -365,17 +370,50 @@ def configure_study_skeleton(study_id):
     
     hx_vals = '{' + ', '.join(hx_vals_parts) + '}'
     
-    # Return skeleton loader with HTMX trigger to create the actual configuration
+    # Return existing configurations with skeleton appended and HTMX trigger to create the actual configuration
     skeleton_html = render_template_string("""
-    {% from "macros/components.html" import skeleton_configuration %}
-    <div id="configurations-list" 
+    {% from "macros/components.html" import collapsible, skeleton_configuration %}
+    <div id="configurations-list" class="fade-me-in"
          hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
          hx-trigger="load"
          hx-vals='{{ hx_vals }}'
          hx-swap="outerHTML">
-        {{ skeleton_configuration() }}
+        {% if configurations %}
+            <div class="hs-accordion-group">
+                {% for config in configurations %}
+                    {% call collapsible(
+                        id="config-" ~ config.id,
+                        title=config.name,
+                        badges=[
+                            "Number of Phases: " ~ config.phases_n,
+                            "Background Distribution: " ~ ('Yes' if config.include_bg_dist else 'No'),
+                            "Background Assignment: " ~ ('Yes' if config.include_bg_assign else 'No'),
+                            "Trip Distribution: " ~ ('Yes' if config.include_trip_dist else 'No') ~ ((' (' ~ config.trip_dist_count ~ ' distributions)') if config.include_trip_dist and config.trip_dist_count > 1 else ''),
+                            "Trip Assignment: " ~ ('Yes' if config.include_trip_assign else 'No')
+                        ],
+                        study_id=study_id,
+                        config_id=config.id,
+                        is_open=False
+                    ) %}
+                        <div class="scenarios-container"
+                             hx-get="{{ url_for('frontend.get_scenarios_skeleton', study_id=study_id, config_id=config.id) }}"
+                             hx-trigger="load"
+                             hx-indicator=".scenarios-spinner-{{ config.id }}">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border scenarios-spinner-{{ config.id }}" role="status">
+                                    <span class="visually-hidden">Loading scenarios...</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endcall %}
+                {% endfor %}
+                {{ skeleton_configuration() }}
+            </div>
+        {% else %}
+            {{ skeleton_configuration() }}
+        {% endif %}
     </div>
-    """, study_id=study_id, hx_vals=hx_vals)
+    """, study_id=study_id, hx_vals=hx_vals, configurations=configurations)
     
     return skeleton_html
 

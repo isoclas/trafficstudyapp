@@ -1,4 +1,3 @@
-# --- START OF traffic_app/routes/frontend.py ---
 import logging
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, make_response, session
@@ -287,6 +286,14 @@ def configure_study_frontend(study_id):
     except ValueError:
         trip_dist_count = 1
 
+    # Get trip assignment count if trip assignment is included
+    try:
+        trip_assign_count = request.form.get('trip_assign_count', type=int) if include_trip_assign else 1
+        if trip_assign_count < 1:
+            trip_assign_count = 1
+    except ValueError:
+        trip_assign_count = 1
+
     if phases_n is None or phases_n < 0:
         logging.error('Number of phases must be a valid non-negative number.')
         if request.headers.get('HX-Request'):
@@ -300,7 +307,8 @@ def configure_study_frontend(study_id):
             'include_bg_assign': include_bg_assign,
             'include_trip_dist': include_trip_dist,
             'trip_dist_count': trip_dist_count,
-            'include_trip_assign': include_trip_assign
+            'include_trip_assign': include_trip_assign,
+            'trip_assign_count': trip_assign_count
         }
 
         data, error, status_code = api_client.configure_study(study_id, config_data)
@@ -896,4 +904,48 @@ def show_delete_confirmation():
                          target=target,
                          swap=swap)
 
-# --- END OF traffic_app/routes/frontend.py ---
+@frontend_bp.route('/study/<int:study_id>/configuration/<int:config_id>/scenarios/reorder', methods=['POST'])
+def reorder_scenarios(study_id, config_id):
+    """Handle scenario reordering via HTMX."""
+    logging.info(f"Frontend: POST request received for reordering scenarios in config {config_id}, study {study_id}")
+    
+    try:
+        # Get the scenario IDs from the form data
+        scenario_ids = request.form.getlist('scenario')
+        logging.info(f"Received scenario order: {scenario_ids}")
+        
+        # Update the order in the database
+        from ..models import Scenario
+        from ..extensions import db
+        
+        for index, scenario_id in enumerate(scenario_ids):
+            scenario = Scenario.query.filter_by(
+                id=int(scenario_id), 
+                study_id=study_id, 
+                configuration_id=config_id
+            ).first()
+            if scenario:
+                scenario.order_index = index
+                logging.info(f"Updated scenario {scenario_id} order to {index}")
+        
+        db.session.commit()
+        logging.info("Scenario reordering completed successfully")
+        
+        # Fetch updated scenarios and return the updated list for HTMX
+        scenarios, error = api_client.get_scenarios(study_id, config_id)
+        if error:
+            logging.error(f"Error fetching updated scenarios: {error}")
+            return f"Error fetching updated scenarios: {error}", 500
+            
+        # Return just the scenario table HTML to replace the table-container
+        from flask import render_template_string
+        table_html = render_template_string(
+            '{% from "macros/components.html" import scenario_table %}{{ scenario_table(scenarios, study_id) }}',
+            scenarios=scenarios, study_id=study_id
+        )
+        return table_html
+        
+    except Exception as e:
+        logging.error(f"Error reordering scenarios: {e}")
+        db.session.rollback()
+        return f"Error reordering scenarios: {str(e)}", 500

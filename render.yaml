@@ -1,11 +1,49 @@
 services:
+  # Staging Environment
   - type: web
-    name: traffic-study-app
+    name: traffic-study-app-staging
     env: python
+    branch: staging  # Deploy from staging branch
     buildCommand: |
       npm install
       npm run build
-      pip install -r requirements_production.txt
+      pip install -r requirements.txt
+      python migrate.py
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: NODE_VERSION
+        value: 18
+      - key: FLASK_ENV
+        value: staging
+      - key: USE_CLOUDINARY
+        value: true
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: traffic-study-db
+          property: connectionString
+    # Auto-deploy staging on push to staging branch
+    autoDeploy: true
+
+  # Production Environment
+  - type: web
+    name: traffic-study-app
+    env: python
+    branch: main  # Deploy from main branch
+    buildCommand: |
+      npm install
+      npm run build
+      pip install -r requirements.txt
+      python migrate.py
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
@@ -28,8 +66,11 @@ services:
         fromDatabase:
           name: traffic-study-db
           property: connectionString
+    # Manual deploy only - no auto-deploy for production
+    autoDeploy: false
 
 databases:
+  # Shared Database for both staging and production
   - name: traffic-study-db
     databaseName: traffic_study_app
-    user: traffic_user
+    user: traffic_study_user

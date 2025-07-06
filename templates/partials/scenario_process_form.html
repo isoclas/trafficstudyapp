@@ -1,4 +1,4 @@
-<form id="process-form" class="flex justify-center mt-8" hx-post="{{ url_for('frontend.process_scenario_frontend', study_id=study_id, scenario_id=scenario['id']) }}"
+<form id="process-form" class="flex justify-center mt-8" hx-post="{{ url_for('frontend.process_scenario_skeleton', study_id=study_id, scenario_id=scenario['id']) }}"
       hx-target="#process-response"
       hx-swap="innerHTML"
       hx-indicator=".process-indicator">

@@ -4,7 +4,8 @@
     <!--<h2 class="mt-4">Configurations</h2>-->
     {% if configurations %}
         <div class="hs-accordion-group">
-            {% for config in configurations %}
+            {% for config in configurations|sort(attribute='id', reverse=true) %}
+                {% set is_open = (open_config_id and config.id == open_config_id) %}
                 {% call collapsible(
                     id="config-" ~ config.id,
                     title=config.name,
@@ -16,11 +17,12 @@
                         "Trip Assignment: " ~ ('Yes' if config.include_trip_assign else 'No')
                     ],
                     study_id=study_id,
-                    config_id=config.id
+                    config_id=config.id,
+                    is_open=is_open
                 ) %}
                     <div class="scenarios-container"
-                         hx-get="{{ url_for('frontend.get_scenarios_for_config', study_id=study_id, config_id=config.id) }}"
-                         hx-trigger="load"
+                         hx-get="{{ url_for('frontend.get_scenarios_skeleton', study_id=study_id, config_id=config.id) }}"
+                         hx-trigger="{% if is_open %}load{% else %}intersect once{% endif %}"
                          hx-indicator=".scenarios-spinner-{{ config.id }}">
                         <div class="d-flex justify-content-center">
                             <div class="spinner-border scenarios-spinner-{{ config.id }}" role="status">

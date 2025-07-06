@@ -78,30 +78,52 @@
     {% block scripts %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
     <script>
+        // Track Flowbite initialization to prevent duplicate event handlers
+        let flowbiteInitialized = false;
+        
+        function safeInitFlowbite() {
+            if (typeof initFlowbite === 'function') {
+                // Destroy existing instances to prevent duplicates
+                if (window.FlowbiteInstances) {
+                    Object.values(window.FlowbiteInstances).forEach(instance => {
+                        if (instance && typeof instance.destroy === 'function') {
+                            try {
+                                instance.destroy();
+                            } catch (e) {
+                                // Ignore destruction errors
+                            }
+                        }
+                    });
+                    window.FlowbiteInstances = {};
+                }
+                initFlowbite();
+            }
+        }
+        
         // Re-initialize Flowbite components after HTMX content swaps
         document.body.addEventListener('htmx:afterSwap', function(event) {
-            if (typeof initFlowbite === 'function') {
-                initFlowbite();
+            // Only reinitialize for specific targets that might contain Flowbite components
+            const target = event.target;
+            const needsFlowbite = target && (
+                target.querySelector('[data-input-counter]') ||
+                target.querySelector('[data-dropdown-toggle]') ||
+                target.querySelector('[data-popover-target]')
+            );
+            
+            if (needsFlowbite) {
+                setTimeout(safeInitFlowbite, 50);
             }
         });
         
         // Re-initialize Flowbite components after browser navigation (back/forward buttons)
         window.addEventListener('popstate', function(event) {
-            // Small delay to ensure DOM is ready
-            setTimeout(function() {
-                if (typeof initFlowbite === 'function') {
-                    initFlowbite();
-                }
-            }, 100);
+            setTimeout(safeInitFlowbite, 100);
         });
         
         // Re-initialize Flowbite components when page is shown (including from cache)
         window.addEventListener('pageshow', function(event) {
-            // Only re-initialize if page was loaded from cache (persisted)
             if (event.persisted) {
-                if (typeof initFlowbite === 'function') {
-                    initFlowbite();
-                }
+                safeInitFlowbite();
             }
         });
     </script>

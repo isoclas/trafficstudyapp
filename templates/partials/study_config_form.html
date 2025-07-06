@@ -1,6 +1,6 @@
 <h4 class="text-2xl font-bold dark:text-white mb-5">Configure Study</h4>
 <form id="config-form"
-      hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
+      hx-post="{{ url_for('frontend.configure_study_skeleton', study_id=study_id) }}"
       hx-target="#configurations-list"
       hx-swap="outerHTML"
       hx-indicator=".config-indicator"

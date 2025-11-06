@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, make_response, session
+from flask import Blueprint, render_template, render_template_string, request, redirect, url_for, current_app, jsonify, make_response, session
 from ..utils import allowed_file # Import from local utils
 from ..extensions import db # Needed for direct DB query for study name
 from ..models import Study, Configuration # Needed for direct DB queries
@@ -220,6 +220,74 @@ def study(study_id):
                           analyst_name=analyst_name, configurations=configurations)
 
 
+@frontend_bp.route('/study/create/skeleton', methods=['POST'])
+def create_study_skeleton():
+    """Show skeleton loader and trigger actual study creation."""
+    study_name = request.form.get('name')
+    analyst_name = request.form.get('analyst_name')
+    
+    if not study_name or not study_name.strip():
+        # Return error without skeleton if validation fails
+        studies, error = api_client.get_studies()
+        return render_template('partials/studies_list.html', studies=studies)
+    elif not analyst_name or not analyst_name.strip():
+        # Return error without skeleton if validation fails
+        studies, error = api_client.get_studies()
+        return render_template('partials/studies_list.html', studies=studies)
+    
+    # Get current studies and add skeleton row at the top
+    studies, error = api_client.get_studies()
+    
+    # Return current studies list with skeleton row at top and HTMX trigger to create the actual study
+    skeleton_html = render_template_string("""
+    {% from "macros/components.html" import skeleton_study_item, study_list_item %}
+    <div id="studies-list" class="fade-me-in">
+        {% if studies %}
+            <div class="relative">
+                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-2 py-3">Study / Analyst</th>
+                            <th scope="col" class="px-2 py-3">Date</th>
+                            <th scope="col" class="px-2 py-3">Status</th>
+                            <th scope="col" class="px-2 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ skeleton_study_item() }}
+                        {% for study in studies %}
+                            {{ study_list_item(study) }}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="relative">
+                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-2 py-3">Study / Analyst</th>
+                            <th scope="col" class="px-2 py-3">Date</th>
+                            <th scope="col" class="px-2 py-3">Status</th>
+                            <th scope="col" class="px-2 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ skeleton_study_item() }}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        <div hx-post="{{ url_for('frontend.create_study_frontend') }}"
+             hx-trigger="load"
+             hx-vals='{"name": "{{ study_name }}", "analyst_name": "{{ analyst_name }}"}'
+             hx-swap="outerHTML"
+             hx-target="#studies-list"></div>
+    </div>
+    """, study_name=study_name, analyst_name=analyst_name, studies=studies)
+    
+    return skeleton_html
+
 @frontend_bp.route('/study/create', methods=['POST'])
 def create_study_frontend():
     """Create a new study."""
@@ -260,6 +328,95 @@ def create_study_frontend():
     # For regular requests, redirect to index
     return redirect(url_for('frontend.index'))
 
+@frontend_bp.route('/study/<int:study_id>/configure/skeleton', methods=['POST'])
+def configure_study_skeleton(study_id):
+    """Show skeleton loader and trigger actual configuration creation."""
+    config_name = request.form.get('config_name', '').strip()
+    if not config_name:
+        # Return error without skeleton if validation fails
+        configurations, error = api_client.get_configurations(study_id)
+        return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
+    
+    # Get existing configurations to show them with the skeleton
+    configurations, error = api_client.get_configurations(study_id)
+    if error:
+        configurations = []
+    
+    # Get all form data for passing to the actual endpoint
+    phases_n = request.form.get('phases_n', '')
+    include_bg_dist = 'include_bg_dist' in request.form
+    include_bg_assign = 'include_bg_assign' in request.form
+    include_trip_dist = 'include_trip_dist' in request.form
+    trip_dist_count = request.form.get('trip_dist_count', '1')
+    include_trip_assign = 'include_trip_assign' in request.form
+    trip_assign_count = request.form.get('trip_assign_count', '1')
+    
+    # Build hx-vals string properly
+    hx_vals_parts = [
+        f'"config_name": "{config_name}"',
+        f'"phases_n": "{phases_n}"',
+        f'"trip_dist_count": "{trip_dist_count}"',
+        f'"trip_assign_count": "{trip_assign_count}"'
+    ]
+    
+    if include_bg_dist:
+        hx_vals_parts.append('"include_bg_dist": "on"')
+    if include_bg_assign:
+        hx_vals_parts.append('"include_bg_assign": "on"')
+    if include_trip_dist:
+        hx_vals_parts.append('"include_trip_dist": "on"')
+    if include_trip_assign:
+        hx_vals_parts.append('"include_trip_assign": "on"')
+    
+    hx_vals = '{' + ', '.join(hx_vals_parts) + '}'
+    
+    # Return existing configurations with skeleton prepended and HTMX trigger to create the actual configuration
+    skeleton_html = render_template_string("""
+    {% from "macros/components.html" import collapsible, skeleton_configuration %}
+    <div id="configurations-list" class="fade-me-in"
+         hx-post="{{ url_for('frontend.configure_study_frontend', study_id=study_id) }}"
+         hx-trigger="load"
+         hx-vals='{{ hx_vals }}'
+         hx-swap="outerHTML">
+        {% if configurations %}
+            <div class="hs-accordion-group">
+                {{ skeleton_configuration() }}
+                {% for config in configurations|sort(attribute='id', reverse=true) %}
+                    {% call collapsible(
+                        id="config-" ~ config.id,
+                        title=config.name,
+                        badges=[
+                            "Number of Phases: " ~ config.phases_n,
+                            "Background Distribution: " ~ ('Yes' if config.include_bg_dist else 'No'),
+                            "Background Assignment: " ~ ('Yes' if config.include_bg_assign else 'No'),
+                            "Trip Distribution: " ~ ('Yes' if config.include_trip_dist else 'No') ~ ((' (' ~ config.trip_dist_count ~ ' distributions)') if config.include_trip_dist and config.trip_dist_count > 1 else ''),
+                            "Trip Assignment: " ~ ('Yes' if config.include_trip_assign else 'No')
+                        ],
+                        study_id=study_id,
+                        config_id=config.id,
+                        is_open=False
+                    ) %}
+                        <div class="scenarios-container"
+                             hx-get="{{ url_for('frontend.get_scenarios_skeleton', study_id=study_id, config_id=config.id) }}"
+                             hx-trigger="intersect once"
+                             hx-indicator=".scenarios-spinner-{{ config.id }}">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border scenarios-spinner-{{ config.id }}" role="status">
+                                    <span class="visually-hidden">Loading scenarios...</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endcall %}
+                {% endfor %}
+            </div>
+        {% else %}
+            {{ skeleton_configuration() }}
+        {% endif %}
+    </div>
+    """, study_id=study_id, hx_vals=hx_vals, configurations=configurations)
+    
+    return skeleton_html
+
 @frontend_bp.route('/study/<int:study_id>/configure', methods=['POST'])
 def configure_study_frontend(study_id):
     """Configure a study with scenarios."""
@@ -267,7 +424,7 @@ def configure_study_frontend(study_id):
     if not config_name:
         logging.error('Configuration name is required.')
         if request.headers.get('HX-Request'):
-            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id))
+            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id, open_config_id=None))
             return response
         return redirect(url_for('frontend.study', study_id=study_id))
 
@@ -297,7 +454,7 @@ def configure_study_frontend(study_id):
     if phases_n is None or phases_n < 0:
         logging.error('Number of phases must be a valid non-negative number.')
         if request.headers.get('HX-Request'):
-            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id))
+            response = make_response(render_template('partials/configurations_list.html', configurations=[], study_id=study_id, open_config_id=None))
             return response
     else:
         config_data = {
@@ -312,10 +469,14 @@ def configure_study_frontend(study_id):
         }
 
         data, error, status_code = api_client.configure_study(study_id, config_data)
+        new_config_id = None
 
         if status_code == 200:
             message = f'Configuration "{config_name}" created successfully!'
             status = 'success'
+            # Extract the new configuration ID from the response
+            if data and 'id' in data:
+                new_config_id = data['id']
         else:
             message = error or f'Error creating configuration.'
             status = 'danger'
@@ -329,12 +490,27 @@ def configure_study_frontend(study_id):
         if error:
             logging.error(f"Error fetching configurations for HTMX response: {error}")
 
-        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id))
+        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=new_config_id))
         return response
 
     # For regular requests, redirect to study page
     return redirect(url_for('frontend.study', study_id=study_id))
 
+
+@frontend_bp.route('/study/<int:study_id>/configuration/<int:config_id>/scenarios/skeleton')
+def get_scenarios_skeleton(study_id, config_id):
+    """Show skeleton loader and trigger actual scenarios loading."""
+    # Return skeleton loader with HTMX trigger to load the actual scenarios
+    skeleton_html = render_template_string("""
+    {% from "macros/components.html" import skeleton_scenario_list %}
+    <div hx-get="{{ url_for('frontend.get_scenarios_for_config', study_id=study_id, config_id=config_id) }}"
+         hx-trigger="load"
+         hx-swap="outerHTML">
+        {{ skeleton_scenario_list() }}
+    </div>
+    """, study_id=study_id, config_id=config_id)
+    
+    return skeleton_html
 
 @frontend_bp.route('/study/<int:study_id>/configuration/<int:config_id>/scenarios')
 def get_scenarios_for_config(study_id, config_id):
@@ -492,6 +668,37 @@ def detect_file_type_from_file(file):
     return file_type
 
 
+@frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>/process/skeleton', methods=['POST'])
+def process_scenario_skeleton(study_id, scenario_id):
+    """Shows skeleton loader immediately and triggers actual processing."""
+    # Render skeleton loader using the macro
+    skeleton_html = render_template_string("""
+    {% from 'macros/components.html' import skeleton_download_files %}
+    {{ skeleton_download_files() }}
+    """)
+    
+    # Generate the URL for the actual processing endpoint
+    process_url = url_for('frontend.process_scenario_frontend', study_id=study_id, scenario_id=scenario_id)
+    
+    response = f"""
+    <!-- Main response for the target element -->
+    <span>Processing...</span>
+    
+    <!-- Out-of-band update to show skeleton loader -->
+    <div id="scenario-downloads" hx-swap-oob="innerHTML">
+        {skeleton_html}
+    </div>
+    
+    <!-- Trigger actual processing after skeleton is shown -->
+    <div hx-post="{process_url}"
+         hx-target="#process-response"
+         hx-swap="innerHTML"
+         hx-trigger="load delay:100ms"></div>
+    """
+    
+    return response
+
+
 @frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>/process', methods=['POST'])
 def process_scenario_frontend(study_id, scenario_id):
     """Handles the button click to trigger scenario processing."""
@@ -591,7 +798,7 @@ def delete_configuration(study_id, config_id):
     if error:
         logging.error(f"Error fetching configurations after deletion: {error}")
 
-    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
+    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
 
 @frontend_bp.route('/study/<int:study_id>/scenario/<int:scenario_id>', methods=['DELETE'])
 def delete_scenario(study_id, scenario_id):
@@ -704,7 +911,7 @@ def delete_configuration_post(study_id, config_id):
         if error:
             logging.error(f"Error fetching configurations for HTMX response: {error}")
 
-        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id))
+        response = make_response(render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None))
 
         return response
 
@@ -722,7 +929,7 @@ def get_configurations_list(study_id):
         logging.error(f"Error fetching configurations for study {study_id}: {error}")
         logging.error(f"Error loading configurations: {error}")
 
-    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id)
+    return render_template('partials/configurations_list.html', configurations=configurations, study_id=study_id, open_config_id=None)
 
 @frontend_bp.route('/study/<int:study_id>/delete', methods=['POST'])
 def delete_study_post(study_id):

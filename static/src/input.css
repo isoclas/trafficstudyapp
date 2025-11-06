@@ -28,3 +28,34 @@
     font-weight: normal;
     font-style: normal;
 }
+
+/* Custom scrollbar styles */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(209 213 219) rgb(243 244 246);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(243 244 246);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(209 213 219);
+}
+
+.dark .custom-scrollbar {
+    scrollbar-color: rgb(115 115 115) rgb(64 64 64);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(64 64 64);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(115 115 115);
+}

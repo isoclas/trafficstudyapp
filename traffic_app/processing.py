@@ -61,8 +61,8 @@ def process_traffic_data(am_csv_path, pm_csv_path, attout_txt_path, output_dir, 
                 am_val, pm_val = row.get(col_am), row.get(col_pm)
                 am_str = str(int(am_val)) if pd.notna(am_val) else '-'
                 pm_str = str(int(pm_val)) if pd.notna(pm_val) else '-'
-                if move.startswith(('E', 'S')): return f"({pm_str}){am_str}"
-                else: return f"{am_str}({pm_str})"
+                if move.startswith(('E', 'S')): return f"({pm_str}) {am_str}"
+                else: return f"{am_str} ({pm_str})"
             df_merged[col_merged] = df_merged.apply(calculate_merged_string, axis=1)
 
         # --- Step 5: (Optional) Prepare and Save Merged CSV Output ---
